@@ -1,25 +1,21 @@
-/* eslint-disable react-native/no-inline-styles */
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
-import {Image, StyleSheet, View, Platform, Dimensions} from 'react-native';
-import {scale} from 'react-native-size-matters';
+import { Image, StyleSheet, View, Dimensions, Platform } from 'react-native';
+import { scale } from 'react-native-size-matters';
 import HomeScreen from '../screens/appScreens/tabScreens/HomeScreen';
 import HistoryScreen from '../screens/appScreens/tabScreens/HistoryScreen';
 import MenuScreen from '../screens/appScreens/tabScreens/MenuScreen';
-import {ICONS} from '../theme/icons';
-import {COLORS} from '../theme/colors';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import { ICONS } from '../theme/icons';
+import { COLORS } from '../theme/colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Tab = createBottomTabNavigator();
-const {width} = Dimensions.get('window');
-
-// console.log('width', width);
+const { width } = Dimensions.get('window');
 
 interface TabBarIconProps {
   focused: boolean;
   icon: any;
   selectedIcon: any;
-  name: string;
 }
 
 const myTabs = [
@@ -46,69 +42,82 @@ const myTabs = [
   },
 ];
 
-const renderTabIcon = ({focused, icon, selectedIcon}: TabBarIconProps) => (
-  <View>
-    <Image
-      source={focused ? selectedIcon : icon}
-      resizeMode="contain"
-      style={{
-        width: width > 600 ? scale(18) : scale(22),
-        height: width > 600 ? scale(18) : scale(22),
-        tintColor: focused ? COLORS.white : 'rgba(191, 191, 191, 1)',
-      }}
-    />
-  </View>
-);
+const TabIcon = ({ focused, icon, selectedIcon }: TabBarIconProps) => {
+  const iconSize = width > 600 ? scale(18) : scale(21);
+  return (
+    <View style={[styles.iconWrapper, focused && styles.iconWrapperFocused]}>
+      <Image
+        source={focused ? selectedIcon : icon}
+        resizeMode="contain"
+        style={{
+          width: iconSize,
+          height: iconSize,
+          tintColor: focused ? COLORS.white : 'rgba(191, 191, 191, 0.75)',
+        }}
+      />
+    </View>
+  );
+};
 
 export function RootBottomNavigation() {
   const safeAreaInsets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
-      screenOptions={({route}) => ({
-        tabBarShowLabel: true,
-        tabBarLabelStyle: {
-          fontSize: scale(10),
-          marginBottom: Platform.OS === 'ios' ? 0 : 0,
-          paddingLeft: width > 600 ? 10 : 0,
-        },
-        tabBarActiveTintColor: COLORS.white,
-        tabBarInactiveTintColor: 'rgba(191, 191, 191, 1)',
+      screenOptions={({ route }) => ({
         headerShown: false,
         tabBarHideOnKeyboard: true,
+        tabBarShowLabel: true,
+        tabBarActiveTintColor: COLORS.white,
+        tabBarInactiveTintColor: 'rgba(191, 191, 191, 0.75)',
+        tabBarLabelStyle: {
+          fontSize: scale(10),
+          fontWeight: '600',
+          letterSpacing: 0.4,
+          marginBottom: scale(5),
+        },
+        tabBarItemStyle: {
+          paddingTop: scale(5),
+        },
         tabBarStyle: {
-          ...styles.tabBar,
-          marginBottom: safeAreaInsets.bottom,
-          // ...(Platform.OS === 'android' && styles.androidShadow),
-          // height: Platform.OS === 'ios' ? 70 : 70,
-          // ...(Platform.OS === 'android' && {
-          //   paddingBottom: 10,
-          //   borderTopLeftRadius: 20,
-          //   borderTopRightRadius: 20,
-          //   paddingHorizontal: 10,
-          //   // marginBottom
-          // }),
+          position: 'absolute',
+          backgroundColor: COLORS.bg2,
+          marginHorizontal: scale(20),
+          marginBottom:
+            safeAreaInsets.bottom > 0 ? safeAreaInsets.bottom : scale(14),
+          borderRadius: 999,
+          height: scale(60),
+          borderTopWidth: 0,
+          ...Platform.select({
+            ios: {
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 10 },
+              shadowOpacity: 0.25,
+              shadowRadius: 16,
+            },
+            android: {
+              elevation: 14,
+            },
+          }),
         },
-        tabBarIcon: ({focused}) => {
+        tabBarIcon: ({ focused }) => {
           const currentTab = myTabs.find(tab => tab.route === route.name);
-          return currentTab
-            ? renderTabIcon({
-                focused,
-                icon: currentTab.icon,
-                selectedIcon: currentTab.selectedIcon,
-                name: currentTab.name,
-              })
-            : null;
+          return currentTab ? (
+            <TabIcon
+              focused={focused}
+              icon={currentTab.icon}
+              selectedIcon={currentTab.selectedIcon}
+            />
+          ) : null;
         },
-      })}>
+      })}
+    >
       {myTabs.map(tab => (
         <Tab.Screen
           key={tab.name}
           name={tab.route}
           component={tab.component}
-          options={{
-            tabBarLabel: tab.name,
-          }}
+          options={{ tabBarLabel: tab.name }}
         />
       ))}
     </Tab.Navigator>
@@ -116,20 +125,14 @@ export function RootBottomNavigation() {
 }
 
 const styles = StyleSheet.create({
-  tabBar: {
-    position: 'absolute',
-    left: 10,
-    right: 10,
-    // bottom: Platform.OS === 'ios' ? 20 : 10,
-    borderRadius: 15,
-    backgroundColor: COLORS.bg2,
-    paddingBottom: Platform.OS === 'ios' ? 10 : 8,
-    // shadowColor: '#000',
-    // shadowOpacity: 0.1,
-    // shadowRadius: 10,
-    // shadowOffset: {width: 0, height: 5},
+  iconWrapper: {
+    width: scale(38),
+    height: scale(28),
+    borderRadius: scale(14),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  androidShadow: {
-    elevation: 5,
+  iconWrapperFocused: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
 });
