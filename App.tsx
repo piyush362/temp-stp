@@ -1,45 +1,30 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useEffect } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider } from 'react-redux';
+import { store } from './src/redux/store';
+import { RootNavigationContainer } from './src/navigation/rootNavigationContainer';
+import { PaperProvider } from 'react-native-paper';
+import { connectSocket } from './src/socket/socketService';
+import EnvFlag from './src/components/flags/EnvFlag';
+import ForceUpdateGate from './src/components/ForceUpdateGate';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
-
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+function App(): React.JSX.Element {
+  useEffect(() => {
+    connectSocket();
+  }, []);
 
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
+    <Provider store={store}>
+      <PaperProvider>
+        <SafeAreaProvider>
+          <ForceUpdateGate>
+            <RootNavigationContainer />
+            <EnvFlag position="right" />
+          </ForceUpdateGate>
+        </SafeAreaProvider>
+      </PaperProvider>
+    </Provider>
   );
 }
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
 
 export default App;
