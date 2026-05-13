@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,8 +7,8 @@ import {
   Text,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import MultiDocPreviewCarousel from './multiDocPrintComponents/MultiDocPreviewCarousel';
 import MultiDocPrintOptions from './multiDocPrintComponents/MultiDocPrintOptions';
@@ -17,14 +17,14 @@ import {
   calculatePrintPriceV2,
   getPrintingCombination,
 } from '../../../utils/pdftoimage';
-import {PrintPriceV2} from '../../../redux/slices/auth.slice';
-import {useDispatch, useSelector} from 'react-redux';
-import {RootState} from '../../../redux/store';
-import {getFileTypeFromUrl} from '../../../utils/uploadDocUtils';
-import {showSnackbar} from '../../../redux/slices/snackbar.slice';
-import {SnackbarType} from '../../../types/common.types';
+import { PrintPriceV2 } from '../../../redux/slices/auth.slice';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
+import { getFileTypeFromUrl } from '../../../utils/uploadDocUtils';
+import { showSnackbar } from '../../../redux/slices/snackbar.slice';
+import { SnackbarType } from '../../../types/common.types';
 import ChooseMultiPaymentMethodModal from '../../../components/bottomSheet/ChooseMultiPaymentMethodModal';
-import {JSONOBJECTLOG} from '../../../utils/utils';
+import { JSONOBJECTLOG } from '../../../utils/utils';
 
 export default function MultiDocPrintSpecScreen() {
   const route: any = useRoute();
@@ -37,7 +37,9 @@ export default function MultiDocPrintSpecScreen() {
   const [printType, setPrintType] = useState('bw'); // bw or color
   const [numberOfCopies, setNumberOfCopies] = useState(1);
   const [printOrientation, setPrintOrientation] = useState('portrait'); // portrait or landscape
-  const [duplexType, setDuplexType] = useState<'singleSide' | 'doubleSide'>("singleSide"); 
+  const [duplexType, setDuplexType] = useState<'singleSide' | 'doubleSide'>(
+    'singleSide',
+  );
 
   const [calculatedPrice, setCalculatedPrice] = useState('0.00');
   const [isPriceCalculating, setIsPriceCalculating] = useState(false);
@@ -49,9 +51,9 @@ export default function MultiDocPrintSpecScreen() {
   const [count, setCount] = useState(1);
   const [pageLength, setPageLength] = useState(1);
 
-  const {uploadedDocumentResponse} = route.params ?? {};
+  const { uploadedDocumentResponse } = route.params ?? {};
 
-  const {printPrice, printPriceV2} = useSelector(
+  const { printPrice, printPriceV2 } = useSelector(
     (state: RootState) => state.auth,
   );
 
@@ -136,7 +138,7 @@ export default function MultiDocPrintSpecScreen() {
 
   // ADD NEW DOCUMENT
   const handleAddDocument = (doc: any) => {
-        setDocuments(prev => [...prev, doc]);
+    setDocuments(prev => [...prev, doc]);
   };
 
   // REMOVE DOCUMENT
@@ -151,9 +153,9 @@ export default function MultiDocPrintSpecScreen() {
   ];
 
   return (
-    <View style={{flex: 1, backgroundColor: '#F5F1FE'}}>
+    <View style={{ flex: 1, backgroundColor: '#F5F1FE' }}>
       {/* HEADER */}
-      <View style={[styles.header, {paddingTop: safe.top}]}>
+      <View style={[styles.header, { paddingTop: safe.top }]}>
         <TouchableOpacity hitSlop={15} onPress={() => navigation.goBack()}>
           <Icon name="arrow-left" size={26} color="#000" />
         </TouchableOpacity>
@@ -188,7 +190,7 @@ export default function MultiDocPrintSpecScreen() {
           setDuplexType={setDuplexType}
         />
 
-        <View style={{height: 50}} />
+        <View style={{ height: 50 }} />
       </ScrollView>
 
       {/* SUMMARY */}
@@ -215,7 +217,7 @@ export default function MultiDocPrintSpecScreen() {
           );
           navigation.reset({
             index: 0,
-            routes: [{name: 'RootBottomNavigation'} as never],
+            routes: [{ name: 'RootBottomNavigation' } as never],
           });
         }}
         priceCombination={priceCombination}
