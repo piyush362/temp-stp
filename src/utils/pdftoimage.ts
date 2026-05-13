@@ -1,4 +1,5 @@
 // import PdfPageImage from 'react-native-pdf-page-image';
+// This is not used in multi doc flow, since we are just showing the 1 page and that is coming from the server
 import { PrintPriceV2 } from '../redux/slices/auth.slice';
 
 export const downloadAndConvertPdfToImages = async (
