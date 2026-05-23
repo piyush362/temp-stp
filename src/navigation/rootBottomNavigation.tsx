@@ -85,7 +85,7 @@ export function RootBottomNavigation() {
           marginHorizontal: scale(20),
           marginBottom:
             safeAreaInsets.bottom > 0 ? safeAreaInsets.bottom : scale(14),
-          borderRadius: 999,
+          borderRadius: 20,
           height: scale(60),
           borderTopWidth: 0,
           ...Platform.select({

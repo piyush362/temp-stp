@@ -10,29 +10,29 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
-import {BOLD_TEXT, REGULAR_TEXT} from '../../theme/styles.global';
-import {COLORS, primaryGradient, secondaryGradient} from '../../theme/colors';
-import {RadioButton} from 'react-native-paper';
+import React, { useState } from 'react';
+import { BOLD_TEXT, REGULAR_TEXT } from '../../theme/styles.global';
+import { COLORS, primaryGradient, secondaryGradient } from '../../theme/colors';
+import { RadioButton } from 'react-native-paper';
 import CustomGradientButton from '../buttons/CustomGradientButton';
 import LinearGradient from 'react-native-linear-gradient';
-import {ICONS} from '../../theme/icons';
-import {JSONOBJECTLOG} from '../../utils/utils';
-import {payDocViaWalletService} from '../../service/authService';
+import { ICONS } from '../../theme/icons';
+import { JSONOBJECTLOG } from '../../utils/utils';
+import { payDocViaWalletService } from '../../service/authService';
 import {
   createRazorpayOrderService,
   verifyRazorpayPaymentService,
 } from '../../service/paymentService';
 import RazorpayCheckout from 'react-native-razorpay';
-import {BASEURL, RAZORPAY_KEY} from '../../../app.env';
-import {useDispatch, useSelector} from 'react-redux';
-import {RootState} from '../../redux/store';
+import { BASEURL, RAZORPAY_KEY } from '../../../app.env';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 import {
   createRazorpayOrderForAddWalletService,
   verifyRazorpayPaymentForAddWalletService,
 } from '../../service/walletService';
-import {getUserProfileDataService} from '../../service/userService';
-import {setUserData} from '../../redux/slices/auth.slice';
+import { getUserProfileDataService } from '../../service/userService';
+import { setUserData } from '../../redux/slices/auth.slice';
 
 interface Props {
   visible: any; // kept same for compatibility
@@ -43,7 +43,7 @@ interface Props {
   printOrientation: any;
   numberOfCopies: any;
   totalPrice: any;
-  duplexType?: "singleSide" | "doubleSide";
+  duplexType?: 'singleSide' | 'doubleSide';
 }
 
 export default function ChooseMultiPaymentMethodModal({
@@ -55,14 +55,14 @@ export default function ChooseMultiPaymentMethodModal({
   printOrientation,
   numberOfCopies,
   totalPrice,
-  duplexType
+  duplexType,
 }: Props) {
   const [paymentMethod, setPaymentMethod] = useState<'wallet' | 'other'>(
     'other',
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isLoaderActive, setIsLoaderActive] = useState(false);
-  const {userData} = useSelector((state: RootState) => state.auth);
+  const { userData } = useSelector((state: RootState) => state.auth);
 
   const dispatch = useDispatch();
 
@@ -81,7 +81,7 @@ export default function ChooseMultiPaymentMethodModal({
       setIsLoading(true);
       setIsLoaderActive(true);
       const duplex_type =
-        duplexType === "singleSide" ? "single_sided" : "double_sided";
+        duplexType === 'singleSide' ? 'single_sided' : 'double_sided';
       for (const doc of documents) {
         const payload = {
           print_price_id: priceCombination?.print_price_id,
@@ -92,7 +92,7 @@ export default function ChooseMultiPaymentMethodModal({
           duplex_type: duplex_type,
         };
 
-        JSONOBJECTLOG({singleDocPayload: payload});
+        JSONOBJECTLOG({ singleDocPayload: payload });
 
         const response = await payDocViaWalletService(payload);
 
@@ -135,7 +135,7 @@ export default function ChooseMultiPaymentMethodModal({
   const createRazorPayOrder = async () => {
     try {
       setIsLoaderActive(true);
-      const _payload = {amount: totalPrice};
+      const _payload = { amount: totalPrice };
       const response = await createRazorpayOrderForAddWalletService(_payload);
       if (response.success) {
         const orderId = response?.data?.order?.id;
@@ -166,7 +166,7 @@ export default function ChooseMultiPaymentMethodModal({
           name: `${userData?.user_name ?? `UserId ${userData?.user_id}`}`,
         },
         notes: {},
-        theme: {color: COLORS.primary},
+        theme: { color: COLORS.primary },
       };
 
       RazorpayCheckout.open(options)
@@ -224,14 +224,16 @@ export default function ChooseMultiPaymentMethodModal({
       onRequestClose={() => {
         setPaymentMethod('other');
         onCancel?.();
-      }}>
+      }}
+    >
       <View style={styles.modalWrapper}>
         <View style={styles.modalContainer}>
-          <View style={{flex: 1, justifyContent: 'space-between'}}>
-            <View style={{padding: 20}}>
+          <View style={{ flex: 1, justifyContent: 'space-between' }}>
+            <View style={{ padding: 20 }}>
               <View style={styles.headerRow}>
                 <Text
-                  style={[REGULAR_TEXT(14, COLORS.gray), styles.subHeading]}>
+                  style={[REGULAR_TEXT(14, COLORS.gray), styles.subHeading]}
+                >
                   Select Payment Method
                 </Text>
 
@@ -241,7 +243,8 @@ export default function ChooseMultiPaymentMethodModal({
                     onCancel?.();
                   }}
                   hitSlop={20}
-                  style={styles.closeButton}>
+                  style={styles.closeButton}
+                >
                   <Image
                     source={ICONS.cross}
                     style={styles.closeIcon}
@@ -254,48 +257,53 @@ export default function ChooseMultiPaymentMethodModal({
                 <TouchableOpacity
                   hitSlop={10}
                   style={styles.radioOption}
-                  onPress={() => setPaymentMethod('other')}>
+                  onPress={() => setPaymentMethod('other')}
+                >
                   <View
                     style={[
                       styles.outerCircle,
                       paymentMethod === 'other' && styles.outerCircleActive,
-                    ]}>
+                    ]}
+                  >
                     {paymentMethod === 'other' && (
                       <View style={styles.innerCircle} />
                     )}
                   </View>
                   <TouchableOpacity
                     hitSlop={10}
-                    onPress={() => setPaymentMethod('other')}>
+                    onPress={() => setPaymentMethod('other')}
+                  >
                     <Text style={REGULAR_TEXT(13)}>Pay</Text>
                   </TouchableOpacity>
                 </TouchableOpacity>
 
-                {/* <TouchableOpacity
+                <TouchableOpacity
                   hitSlop={10}
                   style={styles.radioOption}
-                  onPress={() => setPaymentMethod('wallet')}>
+                  onPress={() => setPaymentMethod('wallet')}
+                >
                   <View
                     style={[
                       styles.outerCircle,
                       paymentMethod === 'wallet' && styles.outerCircleActive,
-                    ]}>
+                    ]}
+                  >
                     {paymentMethod === 'wallet' && (
                       <View style={styles.innerCircle} />
                     )}
                   </View>
                   <TouchableOpacity
                     hitSlop={10}
-                    onPress={() => setPaymentMethod('wallet')}>
+                    onPress={() => setPaymentMethod('wallet')}
+                  >
                     <Text style={REGULAR_TEXT(13)}>Wallet</Text>
                   </TouchableOpacity>
-                </TouchableOpacity> */}
+                </TouchableOpacity>
               </View>
               {paymentMethod === 'wallet' ? (
                 <Text
-                  style={[
-                    REGULAR_TEXT(12, COLORS.gray),
-                  ]}>{`Wallet Balance: Rs.${Number(
+                  style={[REGULAR_TEXT(12, COLORS.gray)]}
+                >{`Wallet Balance: Rs.${Number(
                   userData?.wallet_balance ?? 0,
                 ).toFixed(2)}`}</Text>
               ) : (
@@ -306,26 +314,28 @@ export default function ChooseMultiPaymentMethodModal({
                 Payment Summary
               </Text>
               <View style={styles.amountContainer}>
-                <Text style={[REGULAR_TEXT(14, COLORS.bg3), {width: '60%'}]}>
+                <Text style={[REGULAR_TEXT(14, COLORS.bg3), { width: '60%' }]}>
                   Amount
                 </Text>
                 <Text
                   style={[
                     BOLD_TEXT(14, 'rgba(54, 0, 125, 1)'),
-                    {width: '40%', textAlign: 'right'},
-                  ]}>
+                    { width: '40%', textAlign: 'right' },
+                  ]}
+                >
                   ₹{`${totalPrice || 0}`}
                 </Text>
               </View>
               <View style={styles.amountContainer}>
-                <Text style={[REGULAR_TEXT(14, COLORS.bg3), {width: '60%'}]}>
+                <Text style={[REGULAR_TEXT(14, COLORS.bg3), { width: '60%' }]}>
                   GST
                 </Text>
                 <Text
                   style={[
                     BOLD_TEXT(14, 'rgba(54, 0, 125, 1)'),
-                    {width: '40%', textAlign: 'right'},
-                  ]}>
+                    { width: '40%', textAlign: 'right' },
+                  ]}
+                >
                   RS. 0
                 </Text>
               </View>
@@ -341,9 +351,10 @@ export default function ChooseMultiPaymentMethodModal({
               <TouchableOpacity onPress={() => {}}>
                 <LinearGradient
                   style={styles.arrowButton}
-                  start={{x: 0, y: 0}}
-                  end={{x: 1, y: 0}}
-                  colors={primaryGradient}>
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  colors={primaryGradient}
+                >
                   <Image
                     source={ICONS.arrowLeft}
                     style={{
@@ -358,9 +369,10 @@ export default function ChooseMultiPaymentMethodModal({
             </View>
 
             <LinearGradient
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}
-              colors={secondaryGradient}>
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              colors={secondaryGradient}
+            >
               <View style={styles.footer}>
                 <Text style={[REGULAR_TEXT(14, COLORS.gray)]}>
                   Total{' '}
@@ -377,7 +389,8 @@ export default function ChooseMultiPaymentMethodModal({
                     paddingHorizontal: 30,
                     paddingVertical: 10,
                     borderRadius: 10,
-                  }}>
+                  }}
+                >
                   {isLoading ? (
                     <ActivityIndicator size="small" color={COLORS.white} />
                   ) : (
@@ -412,8 +425,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.mainBg,
     overflow: 'hidden',
   },
-  heading: {marginBottom: 20, textAlign: 'center'},
-  section: {flexDirection: 'row', marginBottom: 20, gap: 10},
+  heading: { marginBottom: 20, textAlign: 'center' },
+  section: { flexDirection: 'row', marginBottom: 20, gap: 10 },
   radioOption: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -427,7 +440,7 @@ const styles = StyleSheet.create({
     marginTop: 'auto',
     padding: 20,
   },
-  subHeading: {marginVertical: 10},
+  subHeading: { marginVertical: 10 },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -464,7 +477,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loaderOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.6)',

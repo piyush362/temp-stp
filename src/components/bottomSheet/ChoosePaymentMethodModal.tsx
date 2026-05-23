@@ -10,53 +10,44 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
-import {BOLD_TEXT, REGULAR_TEXT} from '../../theme/styles.global';
-import {COLORS, primaryGradient, secondaryGradient} from '../../theme/colors';
-import {RadioButton} from 'react-native-paper';
+import React, { useState } from 'react';
+import { BOLD_TEXT, REGULAR_TEXT } from '../../theme/styles.global';
+import { COLORS, primaryGradient, secondaryGradient } from '../../theme/colors';
+import { RadioButton } from 'react-native-paper';
 import CustomGradientButton from '../buttons/CustomGradientButton';
 import LinearGradient from 'react-native-linear-gradient';
-import {ICONS} from '../../theme/icons';
-import {JSONOBJECTLOG} from '../../utils/utils';
-import {payDocViaWalletService} from '../../service/authService';
+import { ICONS } from '../../theme/icons';
+import { JSONOBJECTLOG } from '../../utils/utils';
+import { payDocViaWalletService } from '../../service/authService';
 import {
-  createRazorpayOrderService,
   handleSubPaisaPaymentService,
   initiateSubPaisaPaymentService,
-  verifyRazorpayPaymentService,
 } from '../../service/paymentService';
-// import SabPaisaCheckout, {
-//   SabpaisaCheckoutOptions,
-// } from 'sabpaisa-react-lib-lite';
-import RazorpayCheckout from 'react-native-razorpay';
-import {
-  BASEURL,
-  RAZORPAY_KEY,
-  SUB_PAISA_AUTH_IV_KEY,
-  SUB_PAISA_AUTH_KEY,
-  SUB_PAISA_PASSWORD,
-  SUB_PAISA_USERNAME,
-} from '../../../app.env';
-import {useSelector} from 'react-redux';
-import {RootState} from '../../redux/store';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
+import { useRoute } from '@react-navigation/native';
 
 interface Props {
   visible: any; // kept same for compatibility
   onProceed: (kioskData: string) => void;
-  amount?: number;
+  amount: number;
   paperSpecs: any;
   uploadedDocumentResponse: any;
   onCancel?: () => void;
 }
 
-export default function ChoosePaymentMethodModal({
-  visible,
-  onProceed,
-  amount,
-  paperSpecs,
-  uploadedDocumentResponse,
-  onCancel,
-}: Props) {
+export default function ChoosePaymentMethodScreen() {
+  const route = useRoute();
+
+  const {
+    visible,
+    onProceed,
+    amount,
+    paperSpecs,
+    uploadedDocumentResponse,
+    onCancel,
+  } = route.params as Props;
+
   const [paymentMethod, setPaymentMethod] = useState<'wallet' | 'other'>(
     'other',
   );
@@ -65,7 +56,7 @@ export default function ChoosePaymentMethodModal({
 
   const [responseKioskData, setResponseKioskData] = useState('');
 
-  const {userData} = useSelector((state: RootState) => state.auth);
+  const { userData } = useSelector((state: RootState) => state.auth);
   //   userData?.wallet_balance ?? 0
 
   const handleProceed = async () => {
@@ -75,8 +66,7 @@ export default function ChoosePaymentMethodModal({
     }
 
     if (paymentMethod == 'other') {
-      // handleSabPaisaPayment();
-      createRazorPayOrder();
+      handleSabPaisaPayment();
       return;
     }
     // print_type` enum('colored','black & white') DEFAULT NULL,
@@ -86,7 +76,6 @@ export default function ChoosePaymentMethodModal({
       // print_type: paperSpecs?.printType == 'bw' ? 'black & white' : 'colored',
       print_orientation: paperSpecs?.printOrientation,
       number_of_copies: paperSpecs?.numberOfCopies,
-      number_of_pages: paperSpecs?.pageLength,
       document_token: uploadedDocumentResponse?.document_upload_token,
     };
 
@@ -114,7 +103,7 @@ export default function ChoosePaymentMethodModal({
       setIsLoaderActive(true);
       console.log('verify payment apis');
       const response = await handleSubPaisaPaymentService({
-        data: {id_mobile_app: true, pg_res: data},
+        data: { id_mobile_app: true, pg_res: data },
       });
       console.log('success payment from handle sab paisa payment :✅');
       JSONOBJECTLOG(response);
@@ -187,7 +176,6 @@ export default function ChoosePaymentMethodModal({
       // };
       // console.log('options');
       // JSONOBJECTLOG(options);
-      // console.log('payment started');
       // SabPaisaCheckout.open(options)
       //   .then((data: any) => {
       //     console.log('success payment from sabpaisa :✅');
@@ -212,279 +200,177 @@ export default function ChoosePaymentMethodModal({
     }
   };
 
-  const createRazorPayOrder = async () => {
-    try {
-      setIsLoaderActive(true);
-      const _payload = {
-        print_price_id: paperSpecs?.priceCombination?.print_price_id,
-        print_orientation: paperSpecs?.printOrientation,
-        number_of_copies: paperSpecs?.numberOfCopies,
-        number_of_pages: paperSpecs?.pageLength,
-        document_token: uploadedDocumentResponse?.document_upload_token,
-      };
-      JSONOBJECTLOG(_payload);
-      const response = await createRazorpayOrderService(_payload);
-      // JSONOBJECTLOG(response);
-      // return;
-      if (response.success) {
-        const orderId = response?.data?.order_id;
-        const amount = response?.data?.amount;
-        if (orderId) {
-          handleRazorPayPayment(orderId, amount);
-        }
-      }
-    } catch (error: any) {
-      JSONOBJECTLOG(error?.response?.data);
-      setIsLoaderActive(false);
-    }
-  };
-
-  const handleRazorPayPayment = async (orderId: any, amount: any) => {
-    try {
-      var options = {
-        description: 'StapplesS',
-        image: 'https://www.stapples.in/assets/brandLogo-6ZlFvf9O.png',
-        currency: 'INR',
-        key: RAZORPAY_KEY,
-        order_id: orderId,
-        amount: Number(amount) * 100,
-        name: 'Stapples',
-        prefill: {
-          email: `${userData?.email_id ?? 'email@email.com'}`,
-          contact: `${userData?.phone_number ?? `User: ${userData?.user_id}`}`,
-          name: `${userData?.user_name ?? `UserId ${userData?.user_id}`}`,
-        },
-        notes: {},
-        theme: {color: COLORS.primary},
-      };
-
-      RazorpayCheckout.open(options)
-        .then(_payData => {
-          const signature = _payData?.razorpay_signature;
-          const payId = _payData?.razorpay_payment_id;
-          const orderId = _payData?.razorpay_order_id;
-          verifyRazorPayPayment(orderId, payId, signature);
-        })
-        .catch((error: any) => {
-          console.log('ERROR IN INITIATE PAYMENT');
-          console.log(error);
-          const message =
-            error?.description || 'Something went wrong! Try again.';
-          setIsLoaderActive(false);
-          Alert.alert('Error', 'Something went wrong');
-        });
-    } catch (error) {
-      Alert.alert('Error', 'Something went wrong');
-      setIsLoaderActive(false);
-    }
-  };
-
-  const verifyRazorPayPayment = async (
-    orderId: string,
-    payId: string,
-    signature: string,
-  ) => {
-    try {
-      const response = await verifyRazorpayPaymentService({
-        order_id: orderId,
-        payment_id: payId,
-        signature: signature,
-      });
-      console.log('response', response);
-      if (response?.success) {
-        onProceed('');
-      }
-    } catch (error: any) {
-      console.log(error?.response?.data);
-    } finally {
-      setIsLoaderActive(false);
-    }
-  };
-
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent
-      onRequestClose={() => {
-        setPaymentMethod('other');
-        onCancel?.();
-      }}>
-      <View style={styles.modalWrapper}>
-        <View style={styles.modalContainer}>
-          <View style={{flex: 1, justifyContent: 'space-between'}}>
-            <View style={{padding: 20}}>
-              <View style={styles.headerRow}>
-                <Text
-                  style={[REGULAR_TEXT(14, COLORS.gray), styles.subHeading]}>
-                  Select Payment Method
-                </Text>
-
-                <TouchableOpacity
-                  onPress={() => {
-                    setPaymentMethod('other');
-                    onCancel?.();
-                  }}
-                  hitSlop={20}
-                  style={styles.closeButton}>
-                  <Image
-                    source={ICONS.cross}
-                    style={styles.closeIcon}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.section}>
-                <TouchableOpacity
-                  hitSlop={10}
-                  style={styles.radioOption}
-                  onPress={() => setPaymentMethod('other')}>
-                  <View
-                    style={[
-                      styles.outerCircle,
-                      paymentMethod === 'other' && styles.outerCircleActive,
-                    ]}>
-                    {paymentMethod === 'other' && (
-                      <View style={styles.innerCircle} />
-                    )}
-                  </View>
-                  <TouchableOpacity
-                    hitSlop={10}
-                    onPress={() => setPaymentMethod('other')}>
-                    <Text style={REGULAR_TEXT(13)}>Pay</Text>
-                  </TouchableOpacity>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  hitSlop={10}
-                  style={styles.radioOption}
-                  onPress={() => setPaymentMethod('wallet')}>
-                  <View
-                    style={[
-                      styles.outerCircle,
-                      paymentMethod === 'wallet' && styles.outerCircleActive,
-                    ]}>
-                    {paymentMethod === 'wallet' && (
-                      <View style={styles.innerCircle} />
-                    )}
-                  </View>
-                  <TouchableOpacity
-                    hitSlop={10}
-                    onPress={() => setPaymentMethod('wallet')}>
-                    <Text style={REGULAR_TEXT(13)}>Wallet</Text>
-                  </TouchableOpacity>
-                </TouchableOpacity>
-              </View>
-              {paymentMethod === 'wallet' ? (
-                <Text
-                  style={[
-                    REGULAR_TEXT(12, COLORS.gray),
-                  ]}>{`Wallet Balance: Rs.${Number(
-                  userData?.wallet_balance ?? 0,
-                ).toFixed(2)}`}</Text>
-              ) : (
-                <Text style={[REGULAR_TEXT(12, COLORS.gray)]}> </Text>
-              )}
-
-              <Text style={[REGULAR_TEXT(15, COLORS.gray)]}>
-                Payment Summary
+    // <Modal
+    //   visible={visible}
+    //   animationType="slide"
+    //   transparent
+    //   onRequestClose={() => {
+    //     setPaymentMethod('other');
+    //     onCancel?.();
+    //   }}>
+    <View style={styles.modalWrapper}>
+      <View style={styles.modalContainer}>
+        <View style={{ flex: 1, justifyContent: 'space-between' }}>
+          <View style={{ padding: 20 }}>
+            <View style={styles.headerRow}>
+              <Text style={[REGULAR_TEXT(14, COLORS.gray), styles.subHeading]}>
+                Select Payment Method
               </Text>
-              <View style={styles.amountContainer}>
-                <Text style={[REGULAR_TEXT(14, COLORS.bg3), {width: '60%'}]}>
-                  Amount
-                </Text>
-                <Text
-                  style={[
-                    BOLD_TEXT(14, 'rgba(54, 0, 125, 1)'),
-                    {width: '40%', textAlign: 'right'},
-                  ]}>
-                  ₹{`${paperSpecs?.calculatedPrice || 0}`}
-                </Text>
-              </View>
-              <View style={styles.amountContainer}>
-                <Text style={[REGULAR_TEXT(14, COLORS.bg3), {width: '60%'}]}>
-                  GST
-                </Text>
-                <Text
-                  style={[
-                    BOLD_TEXT(14, 'rgba(54, 0, 125, 1)'),
-                    {width: '40%', textAlign: 'right'},
-                  ]}>
-                  RS. 0
-                </Text>
-              </View>
-            </View>
 
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                keyboardType="decimal-pad"
-                placeholder="Apply Coupon Code"
-                placeholderTextColor="#999"
-              />
-              <TouchableOpacity onPress={() => {}}>
-                <LinearGradient
-                  style={styles.arrowButton}
-                  start={{x: 0, y: 0}}
-                  end={{x: 1, y: 0}}
-                  colors={primaryGradient}>
-                  <Image
-                    source={ICONS.arrowLeft}
-                    style={{
-                      width: 20,
-                      height: 20,
-                      tintColor: COLORS.white,
-                      alignSelf: 'center',
-                    }}
-                  />
-                </LinearGradient>
+              <TouchableOpacity
+                onPress={() => {
+                  setPaymentMethod('other');
+                  onCancel?.();
+                }}
+                hitSlop={20}
+                style={styles.closeButton}
+              >
+                <Image
+                  source={ICONS.cross}
+                  style={styles.closeIcon}
+                  resizeMode="contain"
+                />
               </TouchableOpacity>
             </View>
 
-            <LinearGradient
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}
-              colors={secondaryGradient}>
-              <View style={styles.footer}>
-                <Text style={[REGULAR_TEXT(14, COLORS.gray)]}>
-                  Total{' '}
-                  <Text style={[BOLD_TEXT(14, COLORS.gray)]}>
-                    ₹{`${paperSpecs?.calculatedPrice || 0}`}
-                  </Text>
-                </Text>
-                {/* <CustomGradientButton
-                  onPress={handleProceed}
-                  title="Continue"
-                  isLoading={isLoading}
-                  isDisabled={isLoading}
-                  outerContainerStyle={{width: '40%', height: 40}}
-                  labelStyle={{fontSize: 14}}
-                  innerContainerStyle={{paddingVertical: 7}}
-                /> */}
+            <View style={styles.section}>
+              <TouchableOpacity
+                hitSlop={10}
+                style={styles.radioOption}
+                onPress={() => setPaymentMethod('other')}
+              >
+                <View
+                  style={[
+                    styles.outerCircle,
+                    paymentMethod === 'other' && styles.outerCircleActive,
+                  ]}
+                >
+                  {paymentMethod === 'other' && (
+                    <View style={styles.innerCircle} />
+                  )}
+                </View>
                 <TouchableOpacity
-                  onPress={handleProceed}
-                  hitSlop={15}
-                  style={{
-                    backgroundColor: COLORS.splashBackground,
-                    paddingHorizontal: 30,
-                    paddingVertical: 10,
-                    borderRadius: 10,
-                  }}>
-                  <Text style={[BOLD_TEXT(14, COLORS.white)]}>Continue</Text>
+                  hitSlop={10}
+                  onPress={() => setPaymentMethod('other')}
+                >
+                  <Text style={REGULAR_TEXT(13)}>Pay</Text>
                 </TouchableOpacity>
-              </View>
-            </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                hitSlop={10}
+                style={styles.radioOption}
+                onPress={() => setPaymentMethod('wallet')}
+              >
+                <View
+                  style={[
+                    styles.outerCircle,
+                    paymentMethod === 'wallet' && styles.outerCircleActive,
+                  ]}
+                >
+                  {paymentMethod === 'wallet' && (
+                    <View style={styles.innerCircle} />
+                  )}
+                </View>
+                <TouchableOpacity
+                  hitSlop={10}
+                  onPress={() => setPaymentMethod('wallet')}
+                >
+                  <Text style={REGULAR_TEXT(13)}>Wallet</Text>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[REGULAR_TEXT(15, COLORS.gray)]}>Payment Summary</Text>
+            <View style={styles.amountContainer}>
+              <Text style={[REGULAR_TEXT(14, COLORS.bg3), { width: '60%' }]}>
+                Amount
+              </Text>
+              <Text
+                style={[
+                  BOLD_TEXT(14, 'rgba(54, 0, 125, 1)'),
+                  { width: '40%', textAlign: 'right' },
+                ]}
+              >
+                ₹{`${paperSpecs?.calculatedPrice || 0}`}
+              </Text>
+            </View>
+            <View style={styles.amountContainer}>
+              <Text style={[REGULAR_TEXT(14, COLORS.bg3), { width: '60%' }]}>
+                GST
+              </Text>
+              <Text
+                style={[
+                  BOLD_TEXT(14, 'rgba(54, 0, 125, 1)'),
+                  { width: '40%', textAlign: 'right' },
+                ]}
+              >
+                RS. 0
+              </Text>
+            </View>
           </View>
 
-          {isLoaderActive && (
-            <View style={styles.loaderOverlay}>
-              <ActivityIndicator size="large" color="#0000ff" />
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              keyboardType="decimal-pad"
+              placeholder="Apply Coupon Code"
+              placeholderTextColor="#999"
+            />
+            <TouchableOpacity onPress={() => {}}>
+              <LinearGradient
+                style={styles.arrowButton}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                colors={primaryGradient}
+              >
+                <Image
+                  source={ICONS.arrowLeft}
+                  style={{
+                    width: 20,
+                    height: 20,
+                    tintColor: COLORS.white,
+                    alignSelf: 'center',
+                  }}
+                />
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
+          <LinearGradient
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            colors={secondaryGradient}
+          >
+            <View style={styles.footer}>
+              <Text style={[REGULAR_TEXT(14, COLORS.gray)]}>
+                Total{' '}
+                <Text style={[BOLD_TEXT(14, COLORS.gray)]}>
+                  ₹{`${paperSpecs?.calculatedPrice || 0}`}
+                </Text>
+              </Text>
+              <CustomGradientButton
+                onPress={handleProceed}
+                title="Continue"
+                isLoading={isLoading}
+                isDisabled={isLoading}
+                outerContainerStyle={{ width: '40%', height: 40 }}
+                labelStyle={{ fontSize: 14 }}
+                innerContainerStyle={{ paddingVertical: 7 }}
+              />
             </View>
-          )}
+          </LinearGradient>
         </View>
+
+        {isLoaderActive && (
+          <View style={styles.loaderOverlay}>
+            <ActivityIndicator size="large" color="#0000ff" />
+          </View>
+        )}
       </View>
-    </Modal>
+    </View>
+    // </Modal>
   );
 }
 
@@ -495,14 +381,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContainer: {
-    height: 500,
+    height: 400,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     backgroundColor: COLORS.mainBg,
     overflow: 'hidden',
   },
-  heading: {marginBottom: 20, textAlign: 'center'},
-  section: {flexDirection: 'row', marginBottom: 20, gap: 10},
+  heading: { marginBottom: 20, textAlign: 'center' },
+  section: { flexDirection: 'row', marginBottom: 20, gap: 10 },
   radioOption: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -516,7 +402,7 @@ const styles = StyleSheet.create({
     marginTop: 'auto',
     padding: 20,
   },
-  subHeading: {marginVertical: 10},
+  subHeading: { marginVertical: 10 },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -553,7 +439,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loaderOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.6)',

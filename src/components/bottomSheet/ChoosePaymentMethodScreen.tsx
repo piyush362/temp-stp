@@ -10,32 +10,22 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
-import {BOLD_TEXT, REGULAR_TEXT} from '../../theme/styles.global';
-import {COLORS, primaryGradient, secondaryGradient} from '../../theme/colors';
-import {RadioButton} from 'react-native-paper';
+import React, { useState } from 'react';
+import { BOLD_TEXT, REGULAR_TEXT } from '../../theme/styles.global';
+import { COLORS, primaryGradient, secondaryGradient } from '../../theme/colors';
+import { RadioButton } from 'react-native-paper';
 import CustomGradientButton from '../buttons/CustomGradientButton';
 import LinearGradient from 'react-native-linear-gradient';
-import {ICONS} from '../../theme/icons';
-import {JSONOBJECTLOG} from '../../utils/utils';
-import {payDocViaWalletService} from '../../service/authService';
+import { ICONS } from '../../theme/icons';
+import { JSONOBJECTLOG } from '../../utils/utils';
+import { payDocViaWalletService } from '../../service/authService';
 import {
   handleSubPaisaPaymentService,
   initiateSubPaisaPaymentService,
 } from '../../service/paymentService';
-// import SabPaisaCheckout, {
-//   SabpaisaCheckoutOptions,
-// } from 'sabpaisa-react-lib-lite';
-import {
-  BASEURL,
-  SUB_PAISA_AUTH_IV_KEY,
-  SUB_PAISA_AUTH_KEY,
-  SUB_PAISA_PASSWORD,
-  SUB_PAISA_USERNAME,
-} from '../../../app.env';
-import {useSelector} from 'react-redux';
-import {RootState} from '../../redux/store';
-import {useRoute} from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
+import { useRoute } from '@react-navigation/native';
 
 interface Props {
   visible: any; // kept same for compatibility
@@ -66,7 +56,7 @@ export default function ChoosePaymentMethodScreen() {
 
   const [responseKioskData, setResponseKioskData] = useState('');
 
-  const {userData} = useSelector((state: RootState) => state.auth);
+  const { userData } = useSelector((state: RootState) => state.auth);
   //   userData?.wallet_balance ?? 0
 
   const handleProceed = async () => {
@@ -113,7 +103,7 @@ export default function ChoosePaymentMethodScreen() {
       setIsLoaderActive(true);
       console.log('verify payment apis');
       const response = await handleSubPaisaPaymentService({
-        data: {id_mobile_app: true, pg_res: data},
+        data: { id_mobile_app: true, pg_res: data },
       });
       console.log('success payment from handle sab paisa payment :✅');
       JSONOBJECTLOG(response);
@@ -221,8 +211,8 @@ export default function ChoosePaymentMethodScreen() {
     //   }}>
     <View style={styles.modalWrapper}>
       <View style={styles.modalContainer}>
-        <View style={{flex: 1, justifyContent: 'space-between'}}>
-          <View style={{padding: 20}}>
+        <View style={{ flex: 1, justifyContent: 'space-between' }}>
+          <View style={{ padding: 20 }}>
             <View style={styles.headerRow}>
               <Text style={[REGULAR_TEXT(14, COLORS.gray), styles.subHeading]}>
                 Select Payment Method
@@ -234,7 +224,8 @@ export default function ChoosePaymentMethodScreen() {
                   onCancel?.();
                 }}
                 hitSlop={20}
-                style={styles.closeButton}>
+                style={styles.closeButton}
+              >
                 <Image
                   source={ICONS.cross}
                   style={styles.closeIcon}
@@ -247,19 +238,22 @@ export default function ChoosePaymentMethodScreen() {
               <TouchableOpacity
                 hitSlop={10}
                 style={styles.radioOption}
-                onPress={() => setPaymentMethod('other')}>
+                onPress={() => setPaymentMethod('other')}
+              >
                 <View
                   style={[
                     styles.outerCircle,
                     paymentMethod === 'other' && styles.outerCircleActive,
-                  ]}>
+                  ]}
+                >
                   {paymentMethod === 'other' && (
                     <View style={styles.innerCircle} />
                   )}
                 </View>
                 <TouchableOpacity
                   hitSlop={10}
-                  onPress={() => setPaymentMethod('other')}>
+                  onPress={() => setPaymentMethod('other')}
+                >
                   <Text style={REGULAR_TEXT(13)}>Pay</Text>
                 </TouchableOpacity>
               </TouchableOpacity>
@@ -267,19 +261,22 @@ export default function ChoosePaymentMethodScreen() {
               <TouchableOpacity
                 hitSlop={10}
                 style={styles.radioOption}
-                onPress={() => setPaymentMethod('wallet')}>
+                onPress={() => setPaymentMethod('wallet')}
+              >
                 <View
                   style={[
                     styles.outerCircle,
                     paymentMethod === 'wallet' && styles.outerCircleActive,
-                  ]}>
+                  ]}
+                >
                   {paymentMethod === 'wallet' && (
                     <View style={styles.innerCircle} />
                   )}
                 </View>
                 <TouchableOpacity
                   hitSlop={10}
-                  onPress={() => setPaymentMethod('wallet')}>
+                  onPress={() => setPaymentMethod('wallet')}
+                >
                   <Text style={REGULAR_TEXT(13)}>Wallet</Text>
                 </TouchableOpacity>
               </TouchableOpacity>
@@ -287,26 +284,28 @@ export default function ChoosePaymentMethodScreen() {
 
             <Text style={[REGULAR_TEXT(15, COLORS.gray)]}>Payment Summary</Text>
             <View style={styles.amountContainer}>
-              <Text style={[REGULAR_TEXT(14, COLORS.bg3), {width: '60%'}]}>
+              <Text style={[REGULAR_TEXT(14, COLORS.bg3), { width: '60%' }]}>
                 Amount
               </Text>
               <Text
                 style={[
                   BOLD_TEXT(14, 'rgba(54, 0, 125, 1)'),
-                  {width: '40%', textAlign: 'right'},
-                ]}>
+                  { width: '40%', textAlign: 'right' },
+                ]}
+              >
                 ₹{`${paperSpecs?.calculatedPrice || 0}`}
               </Text>
             </View>
             <View style={styles.amountContainer}>
-              <Text style={[REGULAR_TEXT(14, COLORS.bg3), {width: '60%'}]}>
+              <Text style={[REGULAR_TEXT(14, COLORS.bg3), { width: '60%' }]}>
                 GST
               </Text>
               <Text
                 style={[
                   BOLD_TEXT(14, 'rgba(54, 0, 125, 1)'),
-                  {width: '40%', textAlign: 'right'},
-                ]}>
+                  { width: '40%', textAlign: 'right' },
+                ]}
+              >
                 RS. 0
               </Text>
             </View>
@@ -322,9 +321,10 @@ export default function ChoosePaymentMethodScreen() {
             <TouchableOpacity onPress={() => {}}>
               <LinearGradient
                 style={styles.arrowButton}
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 0}}
-                colors={primaryGradient}>
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                colors={primaryGradient}
+              >
                 <Image
                   source={ICONS.arrowLeft}
                   style={{
@@ -339,9 +339,10 @@ export default function ChoosePaymentMethodScreen() {
           </View>
 
           <LinearGradient
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 0}}
-            colors={secondaryGradient}>
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            colors={secondaryGradient}
+          >
             <View style={styles.footer}>
               <Text style={[REGULAR_TEXT(14, COLORS.gray)]}>
                 Total{' '}
@@ -354,9 +355,9 @@ export default function ChoosePaymentMethodScreen() {
                 title="Continue"
                 isLoading={isLoading}
                 isDisabled={isLoading}
-                outerContainerStyle={{width: '40%', height: 40}}
-                labelStyle={{fontSize: 14}}
-                innerContainerStyle={{paddingVertical: 7}}
+                outerContainerStyle={{ width: '40%', height: 40 }}
+                labelStyle={{ fontSize: 14 }}
+                innerContainerStyle={{ paddingVertical: 7 }}
               />
             </View>
           </LinearGradient>
@@ -386,8 +387,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.mainBg,
     overflow: 'hidden',
   },
-  heading: {marginBottom: 20, textAlign: 'center'},
-  section: {flexDirection: 'row', marginBottom: 20, gap: 10},
+  heading: { marginBottom: 20, textAlign: 'center' },
+  section: { flexDirection: 'row', marginBottom: 20, gap: 10 },
   radioOption: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -401,7 +402,7 @@ const styles = StyleSheet.create({
     marginTop: 'auto',
     padding: 20,
   },
-  subHeading: {marginVertical: 10},
+  subHeading: { marginVertical: 10 },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -438,7 +439,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loaderOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.6)',

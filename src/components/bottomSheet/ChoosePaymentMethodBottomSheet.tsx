@@ -12,38 +12,23 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useCallback, useEffect, useState} from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import {BOLD_TEXT, REGULAR_TEXT} from '../../theme/styles.global';
-import {COLORS, primaryGradient, secondaryGradient} from '../../theme/colors';
-import {RadioButton} from 'react-native-paper';
+import { BOLD_TEXT, REGULAR_TEXT } from '../../theme/styles.global';
+import { COLORS, primaryGradient, secondaryGradient } from '../../theme/colors';
+import { RadioButton } from 'react-native-paper';
 import CustomGradientButton from '../buttons/CustomGradientButton';
 import LinearGradient from 'react-native-linear-gradient';
-import {ICONS} from '../../theme/icons';
-import {JSONOBJECTLOG} from '../../utils/utils';
-import {payDocViaWalletService} from '../../service/authService';
+import { ICONS } from '../../theme/icons';
+import { JSONOBJECTLOG } from '../../utils/utils';
+import { payDocViaWalletService } from '../../service/authService';
 import {
   handleSubPaisaPaymentService,
   initiateJuspayPaymentService,
   initiateSubPaisaPaymentService,
 } from '../../service/paymentService';
-// import SabPaisaCheckout, {
-//   SabpaisaCheckoutOptions,
-// } from 'sabpaisa-react-lib-lite';
-import {
-  AES_IV,
-  AES_KEY,
-  AES_PASSWORD,
-  AES_USERNAME,
-  BASEURL,
-  SUB_PAISA_AUTH_IV_KEY,
-  SUB_PAISA_AUTH_KEY,
-  SUB_PAISA_CLIENT_CODE,
-  SUB_PAISA_PASSWORD,
-  SUB_PAISA_USERNAME,
-} from '../../../app.env';
-import {useSelector} from 'react-redux';
-import {RootState} from '../../redux/store';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 
 interface Props {
   bottomSheetRef: any;
@@ -66,7 +51,7 @@ export default function ChoosePaymentMethodBottomSheet({
 
   const [responseKioskData, setResponseKioskData] = useState('');
 
-  const {userData} = useSelector((state: RootState) => state.auth);
+  const { userData } = useSelector((state: RootState) => state.auth);
 
   const handleProceed = async () => {
     if (!paperSpecs || !uploadedDocumentResponse) {
@@ -110,7 +95,7 @@ export default function ChoosePaymentMethodBottomSheet({
       setIsLoaderActive(true);
       console.log('verify payment apis');
       const response = await handleSubPaisaPaymentService({
-        data: {id_mobile_app: true, pg_res: data},
+        data: { id_mobile_app: true, pg_res: data },
       });
       console.log('success payment from handle sab paisa payment :✅');
       JSONOBJECTLOG(response);
@@ -221,9 +206,10 @@ export default function ChoosePaymentMethodBottomSheet({
           borderTopRightRadius: 20,
           backgroundColor: COLORS.mainBg,
         },
-      }}>
-      <View style={{flex: 1, justifyContent: 'space-between'}}>
-        <View style={{padding: 20}}>
+      }}
+    >
+      <View style={{ flex: 1, justifyContent: 'space-between' }}>
+        <View style={{ padding: 20 }}>
           {/* <Text style={[BOLD_TEXT(20), styles.heading]}>Select Payment Method</Text> */}
           <Text style={[REGULAR_TEXT(14, COLORS.gray), styles.subHeading]}>
             Select Payment Method
@@ -253,26 +239,28 @@ export default function ChoosePaymentMethodBottomSheet({
           <View style={{}}>
             <Text style={[REGULAR_TEXT(15, COLORS.gray)]}>Payment Summary</Text>
             <View style={styles.amountContainer}>
-              <Text style={[REGULAR_TEXT(14, COLORS.bg3), {width: '60%'}]}>
+              <Text style={[REGULAR_TEXT(14, COLORS.bg3), { width: '60%' }]}>
                 Amount
               </Text>
               <Text
                 style={[
                   BOLD_TEXT(14, 'rgba(54, 0, 125, 1)'),
-                  {width: '40%', textAlign: 'right'},
-                ]}>
+                  { width: '40%', textAlign: 'right' },
+                ]}
+              >
                 ₹{`${paperSpecs?.calculatedPrice || 0}`}
               </Text>
             </View>
             <View style={styles.amountContainer}>
-              <Text style={[REGULAR_TEXT(14, COLORS.bg3), {width: '60%'}]}>
+              <Text style={[REGULAR_TEXT(14, COLORS.bg3), { width: '60%' }]}>
                 GST
               </Text>
               <Text
                 style={[
                   BOLD_TEXT(14, 'rgba(54, 0, 125, 1)'),
-                  {width: '40%', textAlign: 'right'},
-                ]}>
+                  { width: '40%', textAlign: 'right' },
+                ]}
+              >
                 RS. 0
               </Text>
             </View>
@@ -290,9 +278,10 @@ export default function ChoosePaymentMethodBottomSheet({
           <TouchableOpacity onPress={() => {}}>
             <LinearGradient
               style={styles.arrowButton}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}
-              colors={primaryGradient}>
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              colors={primaryGradient}
+            >
               <Image
                 source={ICONS.arrowLeft}
                 style={{
@@ -308,9 +297,10 @@ export default function ChoosePaymentMethodBottomSheet({
         </View>
 
         <LinearGradient
-          start={{x: 0, y: 0}}
-          end={{x: 1, y: 0}}
-          colors={secondaryGradient}>
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          colors={secondaryGradient}
+        >
           <View style={styles.footer}>
             <Text style={[REGULAR_TEXT(14, COLORS.gray)]}>
               Total{' '}
@@ -413,7 +403,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loaderOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.6)',
