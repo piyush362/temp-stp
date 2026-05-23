@@ -44,6 +44,8 @@
 	<string>This app requires location access while in use to show nearby services and provide relevant features.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We need access to your photo library to allow you to select images for your app.</string>
+	<key>RCTNewArchEnabled</key>
+	<true/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Poppins-Black.ttf</string>

@@ -82,7 +82,7 @@ export function RootBottomNavigation() {
         tabBarStyle: {
           position: 'absolute',
           backgroundColor: COLORS.bg2,
-          marginHorizontal: scale(20),
+          marginHorizontal: 15,
           marginBottom:
             safeAreaInsets.bottom > 0 ? safeAreaInsets.bottom : scale(14),
           borderRadius: 20,

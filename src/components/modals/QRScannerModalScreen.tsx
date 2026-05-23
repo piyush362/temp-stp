@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -8,32 +8,32 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-// import {
-//   Camera,
-//   useCameraDevice,
-//   useCodeScanner,
-// } from 'react-native-vision-camera';
-import { BOLD_TEXT, REGULAR_TEXT } from '../../theme/styles.global';
-import { COLORS } from '../../theme/colors';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import {
+  Camera,
+  useCameraDevice,
+  useCodeScanner,
+} from 'react-native-vision-camera';
+import {BOLD_TEXT, REGULAR_TEXT} from '../../theme/styles.global';
+import {COLORS} from '../../theme/colors';
 import HeaderNavigation from '../header/HeaderNavigation1';
-import { io } from 'socket.io-client';
-import { BASEURL } from '../../../app.env';
-import { JSONOBJECTLOG } from '../../utils/utils';
+import {io} from 'socket.io-client';
+import {BASEURL} from '../../../app.env';
+import {JSONOBJECTLOG} from '../../utils/utils';
 import FullScreenLoader from './FullScreenLoader';
-import { getSocket } from '../../socket/socketService';
-import { useDispatch } from 'react-redux';
-import { showSnackbar } from '../../redux/slices/snackbar.slice';
-import { SnackbarType } from '../../types/common.types';
+import {getSocket} from '../../socket/socketService';
+import {useDispatch} from 'react-redux';
+import {showSnackbar} from '../../redux/slices/snackbar.slice';
+import {SnackbarType} from '../../types/common.types';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 export const parseQrPayload = (url: string) => {
   try {
     // Split the URL at the '?'
     const parts = url.split('?');
     if (parts.length < 2) {
-      return { success: false, message: 'Invalid QR payload' };
+      return {success: false, message: 'Invalid QR payload'};
     }
 
     const queryString = parts[1]; // topic=abc&track=xyz
@@ -54,7 +54,7 @@ export const parseQrPayload = (url: string) => {
       success: !!(topicName && kios_receiver_topic),
     };
   } catch (err) {
-    return { success: false, message: 'Invalid QR payload' };
+    return {success: false, message: 'Invalid QR payload'};
   }
 };
 
@@ -68,21 +68,21 @@ const QRScannerModalScreen = () => {
   const [qrScanningLoading, setQrScanningLoading] = useState(false);
 
   const route = useRoute();
-  const { currentDocs = {} } = (route.params as any) || {};
+  const {currentDocs = {}} = (route.params as any) || {};
 
-  // const device = useCameraDevice('back');
+  const device = useCameraDevice('back');
 
-  // const codeScanner = useCodeScanner({
-  //   codeTypes: ['qr'],
-  //   onCodeScanned: codes => {
-  //     if (codes.length > 0 && !scannedCode) {
-  //       const code = codes[0]?.value;
-  //       // console.log('Scanned Code:', code);
-  //       setScannedCode(code);
-  //       emitSocket(code);
-  //     }
-  //   },
-  // });
+  const codeScanner = useCodeScanner({
+    codeTypes: ['qr'],
+    onCodeScanned: codes => {
+      if (codes.length > 0 && !scannedCode) {
+        const code = codes[0]?.value;
+        // console.log('Scanned Code:', code);
+        setScannedCode(code);
+        emitSocket(code);
+      }
+    },
+  });
 
   const socket = getSocket();
 
@@ -199,15 +199,14 @@ const QRScannerModalScreen = () => {
   useEffect(() => {
     const requestPermission = async () => {
       console.log('Requesting Camera Permission...');
-      // const permission = await Camera.requestCameraPermission();
-      const permission = 'granted';
+      const permission = await Camera.requestCameraPermission();
       console.log('Camera Permission:', permission);
       setHasPermission(permission === 'granted');
     };
     requestPermission();
   }, []);
 
-  if (true) {
+  if (!device) {
     return (
       <View style={styles.permissionContainer}>
         <Text style={BOLD_TEXT(16, COLORS.black)}>
@@ -220,23 +219,23 @@ const QRScannerModalScreen = () => {
   return (
     <View style={styles.container}>
       {/* Close button */}
-      <View style={{ width: '100%' }}>
+      <View style={{width: '100%'}}>
         <HeaderNavigation label="" />
       </View>
       {/* Title */}
-      <Text style={[BOLD_TEXT(18, COLORS.black), { marginBottom: 20 }]}>
+      <Text style={[BOLD_TEXT(18, COLORS.black), {marginBottom: 20}]}>
         Scan Kiosk QR Code
       </Text>
 
       {/* Small camera frame in center */}
-      {/* <View style={styles.cameraFrame}>
+      <View style={styles.cameraFrame}>
         <Camera
           style={StyleSheet.absoluteFill}
           device={device}
           isActive={!scannedCode && socketConnection} // ✅ socket check added
           codeScanner={codeScanner}
         />
-      </View> */}
+      </View>
 
       {/* Socket Connection Status */}
       {isSocketLoading ? (
@@ -261,8 +260,7 @@ const QRScannerModalScreen = () => {
             borderRadius: 10,
             marginTop: 10,
             opacity: isSocketLoading ? 0.6 : 1,
-          }}
-        >
+          }}>
           <Text style={[REGULAR_TEXT(10, 'black')]}>
             {isSocketLoading ? 'Connecting...' : 'Refresh Connection'}
           </Text>

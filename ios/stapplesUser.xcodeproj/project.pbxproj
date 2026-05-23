@@ -275,13 +275,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-stapplesUser/Pods-stapplesUser-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-stapplesUser/Pods-stapplesUser-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -318,13 +314,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-stapplesUser/Pods-stapplesUser-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-stapplesUser/Pods-stapplesUser-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -351,7 +343,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 9236AB3XMW;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = stapplesUser/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Stapples;
@@ -368,6 +364,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.stapples.user;
 				PRODUCT_NAME = stapplesUser;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Stapples User App";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -382,7 +380,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 9236AB3XMW;
 				INFOPLIST_FILE = stapplesUser/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Stapples;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -398,6 +400,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.stapples.user;
 				PRODUCT_NAME = stapplesUser;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Stapples User App";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
