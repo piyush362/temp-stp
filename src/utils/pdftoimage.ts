@@ -1,6 +1,9 @@
 // import PdfPageImage from 'react-native-pdf-page-image';
 // This is not used in multi doc flow, since we are just showing the 1 page and that is coming from the server
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import { PrintPriceV2 } from '../redux/slices/auth.slice';
+import PdfToImage from 'react-native-pdf-to-image';
+import { Platform } from 'react-native';
 
 export const downloadAndConvertPdfToImages = async (
   pdfUrl: string,
@@ -19,6 +22,54 @@ export const downloadAndConvertPdfToImages = async (
     return images.length > 0 ? images[0] : null;
   } catch (error) {
     console.error('Error generating images:', error);
+    return null;
+  }
+};
+
+export const downloadAndConvertPdfToImagesV4 = async (
+  pdfUrl: string,
+): Promise<{
+  imageFile: { uri: string; width: number; height: number } | null;
+  fileLength: number;
+  allImages: { uri: string; width: number; height: number }[];
+} | null> => {
+  try {
+    // Local PDF path
+    const localPath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/temp.pdf`;
+
+    // Download PDF
+    const res = await ReactNativeBlobUtil.config({
+      path: localPath,
+      fileCache: true,
+    }).fetch('GET', encodeURI(pdfUrl));
+
+    const pdfPath = res.path();
+
+    console.log('Downloaded PDF:', pdfPath);
+
+    // Platform-safe path
+    const sourcePath =
+      Platform.OS === 'android' ? `file://${pdfPath}` : pdfPath;
+
+    // Convert PDF pages -> images
+    const pages = await PdfToImage.convert(sourcePath);
+    console.log('PDF convert result:', pages);
+
+    const images =
+      pages?.outputFiles?.map((item: string) => ({
+        uri: Platform.OS === 'android' ? `file://${item}` : item,
+        width: 0,
+        height: 0,
+      })) ?? [];
+
+    console.log('images', images);
+    return {
+      imageFile: images.length > 0 ? images[0] : null,
+      fileLength: images.length,
+      allImages: images,
+    };
+  } catch (error) {
+    console.error('PDF convert error:', error);
     return null;
   }
 };

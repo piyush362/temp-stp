@@ -11,7 +11,7 @@ import React, {useEffect, useState} from 'react';
 import {ScreenWrapper} from '../../../components/wrapper';
 import HeaderNavigation from '../../../components/header/HeaderNavigation1';
 import {useRoute} from '@react-navigation/native';
-import {downloadAndConvertPdfToImagesV3} from '../../../utils/pdftoimage';
+import { downloadAndConvertPdfToImagesV4} from '../../../utils/pdftoimage';
 import {Grayscale} from 'react-native-color-matrix-image-filters';
 import {JSONOBJECTLOG} from '../../../utils/utils';
 import {COLORS} from '../../../theme/colors';
@@ -37,7 +37,7 @@ export default function PreviewDocScreen() {
     setDocumentType(documentType);
     if (documentType !== 'pdf') return;
     setLoading(true);
-    const result = await downloadAndConvertPdfToImagesV3(
+    const result = await downloadAndConvertPdfToImagesV4(
       document?.document_link,
     );
     if (result?.imageFile?.uri) {

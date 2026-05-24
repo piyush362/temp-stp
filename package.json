@@ -39,6 +39,7 @@
     "react-native-otp-entry": "^1.8.5",
     "react-native-paper": "^5.15.2",
     "react-native-pdf": "^7.0.4",
+    "react-native-pdf-to-image": "^4.0.0",
     "react-native-raw-bottom-sheet": "^3.0.0",
     "react-native-razorpay": "^3.0.0",
     "react-native-safe-area-context": "^5.5.2",

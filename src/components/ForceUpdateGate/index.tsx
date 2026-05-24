@@ -33,7 +33,7 @@ const ForceUpdateGate = ({ children }: any) => {
             console.log('VersionCheck result:', res);
 
             if (res?.isNeeded) {
-                setForceUpdate(true);
+                // setForceUpdate(true);
             }
 
         } catch (e) {
