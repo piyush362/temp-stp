@@ -1518,6 +1518,28 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - react-native-document-scanner (2.0.19):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - react-native-document-viewer (4.0.0):
     - hermes-engine
     - RCTRequired
@@ -2328,6 +2350,7 @@ DEPENDENCIES:
   - react-native-color-matrix-image-filters (from `../node_modules/react-native-color-matrix-image-filters`)
   - react-native-date-picker (from `../node_modules/react-native-date-picker`)
   - "react-native-document-picker (from `../node_modules/@react-native-documents/picker`)"
+  - "react-native-document-scanner (from `../node_modules/@dariyd/react-native-document-scanner`)"
   - "react-native-document-viewer (from `../node_modules/@react-native-documents/viewer`)"
   - "react-native-geolocation (from `../node_modules/@react-native-community/geolocation`)"
   - react-native-pdf (from `../node_modules/react-native-pdf`)
@@ -2478,6 +2501,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-date-picker"
   react-native-document-picker:
     :path: "../node_modules/@react-native-documents/picker"
+  react-native-document-scanner:
+    :path: "../node_modules/@dariyd/react-native-document-scanner"
   react-native-document-viewer:
     :path: "../node_modules/@react-native-documents/viewer"
   react-native-geolocation:
@@ -2630,6 +2655,7 @@ SPEC CHECKSUMS:
   react-native-color-matrix-image-filters: 8f4050f2159f33948f387819847cb6e0f61c0983
   react-native-date-picker: 11c5a0b2a0a54a213d6bb4067bf3df4962c714d4
   react-native-document-picker: 15cca2d1a6bfb6d0d3ff0283bd9b903e57cb028b
+  react-native-document-scanner: 4eb6d99b49d5a75458542625b83d378ad5a2a723
   react-native-document-viewer: 62008060b43ef19abf708ac2f755af0a65e22364
   react-native-geolocation: c41d1ad8e832fa800b4e457c721e348bcc5aa147
   react-native-pdf: 2bc0989bc44ef7e5221c49c0f1bb464a2c27640b

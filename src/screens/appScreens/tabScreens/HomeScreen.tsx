@@ -12,6 +12,8 @@ import {
   RefreshControl,
 } from 'react-native';
 import React, { useCallback, useEffect, useState } from 'react';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { BOLD_TEXT, REGULAR_TEXT } from '../../../theme/styles.global';
 import { COLORS } from '../../../theme/colors';
 import { ICONS } from '../../../theme/icons';
@@ -323,6 +325,27 @@ export default function HomeScreen() {
     </View>
   );
 
+  const renderScannerCard = () => (
+    <TouchableOpacity
+      style={styles.scannerCard}
+      onPress={() => navigation.navigate('DocumentScanner' as never)}
+      activeOpacity={0.8}
+    >
+      <View style={styles.scannerCardLeft}>
+        <View style={styles.scannerIconBg}>
+          <MaterialCommunityIcons name="scanner" size={26} color="white" />
+        </View>
+        <View style={styles.scannerTextContainer}>
+          <Text style={BOLD_TEXT(15, 'white')}>Open Scanner</Text>
+          <Text style={[REGULAR_TEXT(11, 'rgba(255, 255, 255, 0.8)'), { marginTop: 2 }]}>
+            Scan sheets into clean PDFs instantly
+          </Text>
+        </View>
+      </View>
+      <MaterialIcons name="chevron-right" size={24} color="white" />
+    </TouchableOpacity>
+  );
+
   // UI Functions - start with render
   const renderUploadDocumentList = () => {
     return (
@@ -497,6 +520,7 @@ export default function HomeScreen() {
           />
         }>
         {renderUploadContainer()}
+        {renderScannerCard()}
         <HowToUseCard howToUseVideoLink={howToUseVideoLink} />
         <ReferralAnnouncementCard />
         {renderUploadDocumentList()}
@@ -652,5 +676,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 10,
+  },
+  scannerCard: {
+    backgroundColor: COLORS.bg2,
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    boxShadow: '0px 4px 10px rgba(124, 42, 232, 0.2)',
+    elevation: 3,
+  },
+  scannerCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  scannerIconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  scannerTextContainer: {
+    flex: 1,
   },
 });

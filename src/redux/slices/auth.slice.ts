@@ -67,6 +67,7 @@ export interface AuthState {
     status: boolean | null;
     isLoading: boolean | null;
   } | null;
+  scannedPdfs?: Array<{ id: string; name: string; path: string; size: number; date: string }> | null;
 }
 
 const initialState: AuthState = {
@@ -86,6 +87,7 @@ const initialState: AuthState = {
     isLoading: null,
   },
   printPriceV2: [] as PrintPriceV2[],
+  scannedPdfs: [] as { id: string; name: string; path: string; size: number; date: string }[],
 };
 
 export const authSlice = createSlice({
@@ -143,6 +145,19 @@ export const authSlice = createSlice({
     setIsNewUser: (state: AuthState, action: PayloadAction<boolean>) => {
       state.isNewUser = action.payload;
     },
+
+    addScannedPdf: (state: AuthState, action: PayloadAction<any>) => {
+      if (!state.scannedPdfs) {
+        state.scannedPdfs = [];
+      }
+      state.scannedPdfs.unshift(action.payload);
+    },
+
+    deleteScannedPdf: (state: AuthState, action: PayloadAction<string>) => {
+      if (state.scannedPdfs) {
+        state.scannedPdfs = state.scannedPdfs.filter(pdf => pdf.id !== action.payload);
+      }
+    },
   },
 });
 
@@ -157,4 +172,6 @@ export const {
   setSocketData,
   setPrintPriceV2,
   setIsNewUser,
+  addScannedPdf,
+  deleteScannedPdf,
 } = authSlice.actions;
