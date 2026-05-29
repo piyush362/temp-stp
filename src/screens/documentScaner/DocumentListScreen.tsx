@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,35 +6,59 @@ import {
   TouchableOpacity,
   FlatList,
   Modal,
-  SafeAreaView,
   StatusBar,
   Alert,
   Share,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { viewDocument } from '@react-native-documents/viewer';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import Pdf from 'react-native-pdf';
 
-import { RootState } from '../../redux/store';
 import { deleteScannedPdf } from '../../redux/slices/auth.slice';
 import { showSnackbar } from '../../redux/slices/snackbar.slice';
 import { COLORS } from '../../theme/colors';
 import { BOLD_TEXT, REGULAR_TEXT } from '../../theme/styles.global';
 import { SnackbarType } from '../../types/common.types';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  getScannedDocs,
+  removeScannedDoc,
+  ScannedDocItem,
+} from '../../utils/scannedDocsStorage';
+
+const { width } = Dimensions.get('window');
 
 export default function DocumentListScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation();
-  const scannedPdfs = useSelector((state: RootState) => state.auth.scannedPdfs) || [];
+
+  // Load from AsyncStorage instead of Redux so docs persist across app restarts
+  const [scannedPdfs, setScannedPdfs] = useState<ScannedDocItem[]>([]);
 
   // PDF Viewer Modal States
-  const [selectedPdf, setSelectedPdf] = useState<{ name: string; path: string } | null>(null);
+  const [selectedPdf, setSelectedPdf] = useState<{
+    name: string;
+    path: string;
+  } | null>(null);
   const [isViewerVisible, setIsViewerVisible] = useState(false);
+
+  // Load docs from AsyncStorage on every screen focus
+  useFocusEffect(
+    useCallback(() => {
+      loadDocs();
+    }, []),
+  );
+
+  const loadDocs = async () => {
+    const docs = await getScannedDocs();
+    setScannedPdfs(docs);
+  };
 
   const handleOpenScanner = () => {
     // Navigate to DocumentScanner orchestrator
@@ -62,19 +86,26 @@ export default function DocumentListScreen() {
                 ? pdf.path.replace('file://', '')
                 : pdf.path;
               const decodedPath = decodeURIComponent(cleanPath);
-              
+
               const exists = await ReactNativeBlobUtil.fs.exists(decodedPath);
               if (exists) {
                 await ReactNativeBlobUtil.fs.unlink(decodedPath);
               }
-              
+
               // Remove from Redux
               dispatch(deleteScannedPdf(pdf.id));
+
+              // Remove from AsyncStorage
+              await removeScannedDoc(pdf.id);
+
+              // Refresh the local list
+              setScannedPdfs(prev => prev.filter(d => d.id !== pdf.id));
+
               dispatch(
                 showSnackbar({
                   message: 'Document deleted successfully',
                   type: SnackbarType.success,
-                })
+                }),
               );
             } catch (error) {
               console.error('Error deleting PDF file:', error);
@@ -82,12 +113,12 @@ export default function DocumentListScreen() {
                 showSnackbar({
                   message: 'Failed to delete file',
                   type: SnackbarType.error,
-                })
+                }),
               );
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -97,7 +128,8 @@ export default function DocumentListScreen() {
         ? pdf.path.replace('file://', '')
         : pdf.path;
       const decodedPath = decodeURIComponent(cleanPath);
-      const platformPath = Platform.OS === 'android' ? `file://${decodedPath}` : decodedPath;
+      const platformPath =
+        Platform.OS === 'android' ? `file://${decodedPath}` : decodedPath;
 
       if (Platform.OS === 'ios') {
         await Share.share({
@@ -114,7 +146,10 @@ export default function DocumentListScreen() {
           });
         } catch (err) {
           // Fallback to launching an ACTION_VIEW chooser intent
-          await ReactNativeBlobUtil.android.actionViewIntent(decodedPath, 'application/pdf');
+          await ReactNativeBlobUtil.android.actionViewIntent(
+            decodedPath,
+            'application/pdf',
+          );
         }
       }
     } catch (error) {
@@ -123,9 +158,19 @@ export default function DocumentListScreen() {
         showSnackbar({
           message: 'Failed to share document',
           type: SnackbarType.error,
-        })
+        }),
       );
     }
+  };
+
+  const handleUploadAndGetCode = (pdf: any) => {
+    // TODO: Implement upload and get print code in next step
+    dispatch(
+      showSnackbar({
+        message: 'Upload & Print Code coming soon!',
+        type: SnackbarType.success,
+      }),
+    );
   };
 
   const formatSize = (bytes: number) => {
@@ -138,44 +183,80 @@ export default function DocumentListScreen() {
     return `${mb.toFixed(1)} MB`;
   };
 
-  const renderItem = ({ item }: { item: any }) => (
+  const renderItem = ({ item }: { item: ScannedDocItem }) => (
     <View style={styles.card}>
-      <TouchableOpacity 
+      {/* Top Row: PDF Icon + Details */}
+      <TouchableOpacity
         style={styles.cardMain}
         onPress={() => handleViewPdf(item)}
         activeOpacity={0.7}
       >
         <View style={styles.pdfIconContainer}>
-          <MaterialCommunityIcons name="file-pdf-box" size={40} color="#FF3B30" />
+          <MaterialCommunityIcons
+            name="file-pdf-box"
+            size={40}
+            color="#FF3B30"
+          />
         </View>
         <View style={styles.cardDetails}>
-          <Text style={[BOLD_TEXT(15, '#1C1C1E'), styles.docName]} numberOfLines={1}>
+          <Text
+            style={[BOLD_TEXT(15, '#1C1C1E'), styles.docName]}
+            numberOfLines={1}
+          >
             {item.name}
           </Text>
-          <Text style={REGULAR_TEXT(12, '#8E8E93')}>
-            {item.date}
-          </Text>
-          <Text style={[REGULAR_TEXT(11, COLORS.darkBlue), { marginTop: 2 }]}>
-            {formatSize(item.size)}
-          </Text>
+          <Text style={REGULAR_TEXT(12, '#8E8E93')}>{item.date}</Text>
+          <View style={styles.metaRow}>
+            <Text style={[REGULAR_TEXT(11, COLORS.darkBlue)]}>
+              {formatSize(item.size)}
+            </Text>
+            {item.pageCount && (
+              <Text style={[REGULAR_TEXT(11, '#8E8E93'), { marginLeft: 12 }]}>
+                {item.pageCount} {item.pageCount === 1 ? 'page' : 'pages'}
+              </Text>
+            )}
+          </View>
         </View>
       </TouchableOpacity>
 
-      <View style={styles.cardActions}>
-        <TouchableOpacity 
-          style={styles.actionBtn} 
-          onPress={() => handleSharePdf(item)}
-          hitSlop={10}
+      {/* Action buttons row */}
+      <View style={styles.actionRow}>
+        {/* Upload & Get Print Code — highlighted */}
+        <TouchableOpacity
+          style={styles.uploadBtn}
+          onPress={() => handleUploadAndGetCode(item)}
+          activeOpacity={0.8}
         >
-          <MaterialIcons name="share" size={22} color={COLORS.gray} />
+          <MaterialCommunityIcons
+            name="cloud-upload-outline"
+            size={18}
+            color="white"
+            style={{ marginRight: 6 }}
+          />
+          <Text style={BOLD_TEXT(12, 'white')}>Upload & Get Print Code</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.actionBtn} 
-          onPress={() => handleDeletePdf(item)}
-          hitSlop={10}
-        >
-          <MaterialCommunityIcons name="delete-outline" size={24} color="#FF3B30" />
-        </TouchableOpacity>
+
+        {/* Share and Delete */}
+        <View style={styles.cardActions}>
+          <TouchableOpacity
+            style={styles.actionBtn}
+            onPress={() => handleSharePdf(item)}
+            hitSlop={10}
+          >
+            <MaterialIcons name="share" size={22} color={COLORS.gray} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionBtn}
+            onPress={() => handleDeletePdf(item)}
+            hitSlop={10}
+          >
+            <MaterialCommunityIcons
+              name="delete-outline"
+              size={24}
+              color="#FF3B30"
+            />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -183,11 +264,11 @@ export default function DocumentListScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.mainBg} />
-      
+
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => navigation.navigate('HomeTabScreen' as never)}
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
           style={styles.backButton}
           hitSlop={15}
         >
@@ -203,27 +284,37 @@ export default function DocumentListScreen() {
       {scannedPdfs.length === 0 ? (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconBg}>
-            <MaterialCommunityIcons name="scanner" size={70} color={COLORS.darkBlue} />
+            <MaterialCommunityIcons
+              name="scanner"
+              size={70}
+              color={COLORS.darkBlue}
+            />
           </View>
           <Text style={[BOLD_TEXT(18, '#1C1C1E'), { marginTop: 20 }]}>
             No scanned documents yet
           </Text>
           <Text style={[REGULAR_TEXT(14, '#8E8E93'), styles.emptySubtitle]}>
-            Scan and organize your physical sheets, receipts, or bills into clean PDFs in seconds.
+            Scan and organize your physical sheets, receipts, or bills into
+            clean PDFs in seconds.
           </Text>
-          <TouchableOpacity 
-            style={styles.primaryBtn} 
+          <TouchableOpacity
+            style={styles.primaryBtn}
             onPress={handleOpenScanner}
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons name="camera-plus" size={20} color="white" style={{ marginRight: 8 }} />
+            <MaterialCommunityIcons
+              name="camera-plus"
+              size={20}
+              color="white"
+              style={{ marginRight: 8 }}
+            />
             <Text style={BOLD_TEXT(15, 'white')}>Open Scanner</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <FlatList
           data={scannedPdfs}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -232,8 +323,8 @@ export default function DocumentListScreen() {
 
       {/* Floating Action Button */}
       {scannedPdfs.length > 0 && (
-        <TouchableOpacity 
-          style={styles.fab} 
+        <TouchableOpacity
+          style={styles.fab}
           onPress={handleOpenScanner}
           activeOpacity={0.85}
         >
@@ -249,17 +340,20 @@ export default function DocumentListScreen() {
       >
         <SafeAreaView style={styles.viewerContainer}>
           <View style={styles.viewerHeader}>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => setIsViewerVisible(false)}
               style={styles.closeBtn}
               hitSlop={15}
             >
               <MaterialIcons name="close" size={24} color="#1C1C1E" />
             </TouchableOpacity>
-            <Text style={[BOLD_TEXT(16, '#1C1C1E'), styles.viewerTitle]} numberOfLines={1}>
+            <Text
+              style={[BOLD_TEXT(16, '#1C1C1E'), styles.viewerTitle]}
+              numberOfLines={1}
+            >
               {selectedPdf?.name}
             </Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => selectedPdf && handleSharePdf(selectedPdf)}
               style={styles.shareBtn}
               hitSlop={15}
@@ -267,12 +361,12 @@ export default function DocumentListScreen() {
               <MaterialIcons name="share" size={22} color="#1C1C1E" />
             </TouchableOpacity>
           </View>
-          
+
           {selectedPdf ? (
             <Pdf
               source={{ uri: selectedPdf.path }}
               style={styles.pdfViewer}
-              onError={(error) => {
+              onError={error => {
                 console.error('PDF view error:', error);
                 Alert.alert('Error', 'Unable to display PDF file.');
               }}
@@ -320,16 +414,12 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: 'white',
     borderRadius: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.05)',
+    marginBottom: 14,
+    padding: 14,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.06)',
     elevation: 2,
   },
   cardMain: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -349,12 +439,33 @@ const styles = StyleSheet.create({
   docName: {
     marginBottom: 2,
   },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  uploadBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.bg2,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    boxShadow: '0px 2px 8px rgba(124, 42, 232, 0.25)',
+    elevation: 2,
+  },
   cardActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderLeftWidth: 1,
-    borderLeftColor: 'rgba(0,0,0,0.05)',
-    paddingLeft: 8,
   },
   actionBtn: {
     padding: 8,

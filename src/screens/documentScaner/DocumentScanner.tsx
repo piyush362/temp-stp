@@ -42,14 +42,19 @@ export default function DocumentScanner() {
       }
 
       if (result.error) {
-        Alert.alert('Scanner Error', result.errorMessage || 'An error occurred during scanning');
+        Alert.alert(
+          'Scanner Error',
+          result.errorMessage || 'An error occurred during scanning',
+        );
         navigation.goBack();
         return;
       }
 
       if (result.images && result.images.length > 0) {
         // Navigate to preview screen with scanned images
-        (navigation.navigate as any)('ScannerPreview', { images: result.images });
+        (navigation.navigate as any)('ScannerPreview', {
+          images: result.images,
+        });
       } else {
         navigation.goBack();
       }
@@ -59,7 +64,7 @@ export default function DocumentScanner() {
         showSnackbar({
           message: 'Failed to start scanner camera',
           type: SnackbarType.error,
-        })
+        }),
       );
       navigation.goBack();
     } finally {
@@ -67,23 +72,13 @@ export default function DocumentScanner() {
     }
   };
 
-  // Automatically start the scanner on screen focus
-  useFocusEffect(
-    useCallback(() => {
-      if (!hasLaunched) {
-        setHasLaunched(true);
-        startScanning();
-      }
-    }, [hasLaunched])
-  );
-
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.mainBg} />
+      <StatusBar barStyle="dark-content" backgroundColor={'white'} />
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
           hitSlop={15}
@@ -93,25 +88,40 @@ export default function DocumentScanner() {
         <Text style={[BOLD_TEXT(18, '#1C1C1E'), styles.headerTitle]}>
           Document Scanner
         </Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => (navigation.navigate as any)('DocumentListScreen')}
           style={styles.listHeaderButton}
           hitSlop={15}
         >
-          <MaterialCommunityIcons name="file-document-multiple-outline" size={24} color={COLORS.darkBlue} />
+          <MaterialCommunityIcons
+            name="file-document-multiple-outline"
+            size={24}
+            color={COLORS.darkBlue}
+          />
         </TouchableOpacity>
       </View>
 
       <View style={styles.content}>
         <View style={styles.iconBg}>
-          <MaterialCommunityIcons name="scanner" size={80} color={COLORS.darkBlue} />
+          <MaterialCommunityIcons
+            name="scanner"
+            size={80}
+            color={COLORS.darkBlue}
+          />
         </View>
 
-        <Text style={[BOLD_TEXT(20, '#1C1C1E'), { marginTop: 30, textAlign: 'center' }]}>
+        <Text
+          style={[
+            BOLD_TEXT(20, '#1C1C1E'),
+            { marginTop: 30, textAlign: 'center' },
+          ]}
+        >
           Document Scanner Engine
         </Text>
         <Text style={[REGULAR_TEXT(14, '#8E8E93'), styles.subtitle]}>
-          Align your paper or document inside the camera frame. The automatic detector will auto-crop, adjust edges, and correct perspective instantly.
+          Align your paper or document inside the camera frame. The automatic
+          detector will auto-crop, adjust edges, and correct perspective
+          instantly.
         </Text>
 
         {loading ? (
@@ -122,24 +132,36 @@ export default function DocumentScanner() {
             </Text>
           </View>
         ) : (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.scanBtn}
             onPress={startScanning}
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons name="camera" size={24} color="white" style={{ marginRight: 8 }} />
+            <MaterialCommunityIcons
+              name="camera"
+              size={24}
+              color="white"
+              style={{ marginRight: 8 }}
+            />
             <Text style={BOLD_TEXT(16, 'white')}>Start Scanning</Text>
           </TouchableOpacity>
         )}
 
         {!loading && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.listBtn}
             onPress={() => (navigation.navigate as any)('DocumentListScreen')}
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons name="file-document-multiple-outline" size={20} color={COLORS.darkBlue} style={{ marginRight: 8 }} />
-            <Text style={BOLD_TEXT(16, COLORS.darkBlue)}>View Saved Documents</Text>
+            <MaterialCommunityIcons
+              name="file-document-multiple-outline"
+              size={20}
+              color={COLORS.darkBlue}
+              style={{ marginRight: 8 }}
+            />
+            <Text style={BOLD_TEXT(16, COLORS.darkBlue)}>
+              View Saved Documents
+            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -160,7 +182,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.05)',
-    backgroundColor: 'white',
+    // backgroundColor: 'white',
   },
   backButton: {
     width: 40,

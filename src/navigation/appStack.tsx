@@ -3,7 +3,7 @@ import {
   CardStyleInterpolators,
   createStackNavigator,
 } from '@react-navigation/stack';
-import {RootBottomNavigation} from './rootBottomNavigation';
+import { RootBottomNavigation } from './rootBottomNavigation';
 import WalletScreen from '../screens/appScreens/wallet/WalletScreen';
 import PrivacyPolicyScreen from '../screens/appScreens/termsandPolicy/privacyPolicy';
 import TermsAndConditionScreen from '../screens/appScreens/termsandPolicy/termsAndConditions';
@@ -20,14 +20,17 @@ import RefundPolicyScreen from '../screens/appScreens/termsandPolicy/refundPolic
 import SimpleBottomSheet from '../components/bottomSheet/SimpleBottmSheet';
 import ChoosePaymentMethodScreen from '../components/bottomSheet/ChoosePaymentMethodScreen';
 import PrintSpecsScreen from '../components/bottomSheet/PrintSpecsScreen';
-import {useSelector} from 'react-redux';
-import {RootState} from '../redux/store';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
 import ReferralScreen from '../screens/appScreens/referralScreens/ReferralScreen';
 import VideoPlayerScreen from '../screens/appScreens/VideoPlayerScreen';
 import MultiDocPrintSpecScreen from '../screens/appScreens/multiDocPrintScreens/MultiDocPrintSpecScreen';
 import DocSupportScreen from '../screens/appScreens/supportScreens/DocSupportScreen';
 import SupportTicketListScreen from '../screens/appScreens/supportScreens/SupportTicketListScreen';
 import SupportChatScreen from '../screens/appScreens/supportScreens/SupportChatScreen';
+import DocumentScanner from '../screens/documentScaner/DocumentScanner';
+import ScannerPreview from '../screens/documentScaner/ScannerPreview';
+import DocumentListScreen from '../screens/documentScaner/DocumentListScreen';
 
 const Stack = createStackNavigator();
 
@@ -165,10 +168,35 @@ const MyScreens = [
     name: 'SupportChatScreen',
     component: SupportChatScreen,
   },
+
+  {
+    id: '212',
+    name: 'DocumentScanner',
+    component: DocumentScanner,
+    option: {
+      cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+    },
+  },
+  {
+    id: '213',
+    name: 'ScannerPreview',
+    component: ScannerPreview,
+    option: {
+      cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+    },
+  },
+  {
+    id: '214',
+    name: 'DocumentListScreen',
+    component: DocumentListScreen,
+    option: {
+      cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+    },
+  },
 ];
 
 export function AppStack() {
-  const {isNewUser} = useSelector((state: RootState) => state.auth);
+  const { isNewUser } = useSelector((state: RootState) => state.auth);
 
   const initialRouteName = isNewUser ? 'ProfileScreen' : 'RootBottomNavigation';
   // const initialRouteName = isNewUser ? 'RootBottomNavigation' : 'ProfileScreen';
@@ -179,7 +207,8 @@ export function AppStack() {
       initialRouteName={initialRouteName}
       screenOptions={{
         headerShown: false,
-      }}>
+      }}
+    >
       {MyScreens.map(screen => (
         <Stack.Screen
           key={screen.id}

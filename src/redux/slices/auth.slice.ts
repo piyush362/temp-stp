@@ -67,7 +67,7 @@ export interface AuthState {
     status: boolean | null;
     isLoading: boolean | null;
   } | null;
-  scannedPdfs?: Array<{ id: string; name: string; path: string; size: number; date: string }> | null;
+  scannedPdfs?: Array<{ id: string; name: string; path: string; size: number; date: string; pageCount?: number }> | null;
 }
 
 const initialState: AuthState = {
@@ -87,7 +87,7 @@ const initialState: AuthState = {
     isLoading: null,
   },
   printPriceV2: [] as PrintPriceV2[],
-  scannedPdfs: [] as { id: string; name: string; path: string; size: number; date: string }[],
+  scannedPdfs: [] as { id: string; name: string; path: string; size: number; date: string; pageCount?: number }[],
 };
 
 export const authSlice = createSlice({

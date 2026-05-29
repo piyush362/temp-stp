@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
-  SafeAreaView,
   StatusBar,
   Modal,
   TextInput,
@@ -27,6 +26,8 @@ import { COLORS } from '../../theme/colors';
 import { BOLD_TEXT, REGULAR_TEXT } from '../../theme/styles.global';
 import { SnackbarType } from '../../types/common.types';
 import { generatePdfFromImages } from './pdfGenerator';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { addScannedDoc } from '../../utils/scannedDocsStorage';
 
 const { width } = Dimensions.get('window');
 const COLUMN_WIDTH = (width - 48) / 2; // 2 column grid
@@ -46,7 +47,9 @@ export default function ScannerPreview() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [docName, setDocName] = useState(() => {
     const dateStr = new Date().toLocaleDateString().replace(/\//g, '-');
-    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).replace(/:/g, '-');
+    const timeStr = new Date()
+      .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      .replace(/:/g, '-');
     return `Scanned_Doc_${dateStr}_${timeStr.replace(/\s+/g, '')}`;
   });
 
@@ -58,17 +61,20 @@ export default function ScannerPreview() {
 
       if (result.didCancel) return;
       if (result.error) {
-        Alert.alert('Scanner Error', result.errorMessage || 'An error occurred during scanning');
+        Alert.alert(
+          'Scanner Error',
+          result.errorMessage || 'An error occurred during scanning',
+        );
         return;
       }
 
       if (result.images && result.images.length > 0) {
-        setImages((prev) => [...prev, ...result.images!]);
+        setImages(prev => [...prev, ...result.images!]);
         dispatch(
           showSnackbar({
             message: `Added ${result.images.length} page(s)`,
             type: SnackbarType.success,
-          })
+          }),
         );
       }
     } catch (err) {
@@ -77,7 +83,7 @@ export default function ScannerPreview() {
         showSnackbar({
           message: 'Failed to launch camera',
           type: SnackbarType.error,
-        })
+        }),
       );
     }
   };
@@ -95,14 +101,14 @@ export default function ScannerPreview() {
             const updated = [...images];
             updated.splice(index, 1);
             setImages(updated);
-            
+
             // Go back if no images left
             if (updated.length === 0) {
               navigation.goBack();
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -116,32 +122,40 @@ export default function ScannerPreview() {
     setIsSaving(true);
 
     try {
-      const finalDocName = docName.endsWith('.pdf') ? docName : `${docName}.pdf`;
-      
+      const finalDocName = docName.endsWith('.pdf')
+        ? docName
+        : `${docName}.pdf`;
+
       // Compile PDF locally in pure JS
       const path = await generatePdfFromImages(images, finalDocName);
-      
+
       // Get file details for Redux
-      const cleanPath = path.startsWith('file://') ? path.replace('file://', '') : path;
+      const cleanPath = path.startsWith('file://')
+        ? path.replace('file://', '')
+        : path;
       const decodedPath = decodeURIComponent(cleanPath);
       const stat = await ReactNativeBlobUtil.fs.stat(decodedPath);
-      
+
       const newPdfItem = {
         id: Date.now().toString(),
         name: finalDocName,
         path: path,
         size: stat.size,
         date: new Date().toLocaleString(),
+        pageCount: images.length,
       };
 
       // Add to Redux
       dispatch(addScannedPdf(newPdfItem));
 
+      // Persist to AsyncStorage so it survives app restarts
+      await addScannedDoc(newPdfItem);
+
       dispatch(
         showSnackbar({
           message: 'Document saved successfully as PDF',
           type: SnackbarType.success,
-        })
+        }),
       );
 
       // Navigate to Scanned Documents List Screen
@@ -152,7 +166,7 @@ export default function ScannerPreview() {
         showSnackbar({
           message: 'Failed to generate PDF',
           type: SnackbarType.error,
-        })
+        }),
       );
     } finally {
       setIsSaving(false);
@@ -161,8 +175,8 @@ export default function ScannerPreview() {
 
   const renderGridItem = ({ item, index }: { item: any; index: number }) => (
     <View style={styles.gridCard}>
-      <TouchableOpacity 
-        style={styles.imageWrapper} 
+      <TouchableOpacity
+        style={styles.imageWrapper}
         onPress={() => setActiveImageIndex(index)}
         activeOpacity={0.9}
       >
@@ -173,15 +187,22 @@ export default function ScannerPreview() {
       </TouchableOpacity>
 
       <View style={styles.cardActions}>
-        <Text style={[REGULAR_TEXT(11, '#6B6B6B'), { flex: 1 }]} numberOfLines={1}>
+        <Text
+          style={[REGULAR_TEXT(11, '#6B6B6B'), { flex: 1 }]}
+          numberOfLines={1}
+        >
           Page {index + 1}
         </Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => handleDeleteImage(index)}
           hitSlop={10}
           style={styles.deleteBtn}
         >
-          <MaterialCommunityIcons name="trash-can-outline" size={18} color="#FF3B30" />
+          <MaterialCommunityIcons
+            name="trash-can-outline"
+            size={18}
+            color="#FF3B30"
+          />
         </TouchableOpacity>
       </View>
     </View>
@@ -193,7 +214,7 @@ export default function ScannerPreview() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
           hitSlop={15}
@@ -203,7 +224,7 @@ export default function ScannerPreview() {
         <Text style={[BOLD_TEXT(18, '#1C1C1E'), styles.headerTitle]}>
           Scanned Pages ({images.length})
         </Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={handleAddMore}
           style={styles.addMoreBtn}
           hitSlop={15}
@@ -224,20 +245,30 @@ export default function ScannerPreview() {
 
       {/* Bottom Save bar */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.addPageBtn}
           onPress={handleAddMore}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="camera-plus-outline" size={20} color={COLORS.darkBlue} style={{ marginRight: 6 }} />
+          <MaterialCommunityIcons
+            name="camera-plus-outline"
+            size={20}
+            color={COLORS.darkBlue}
+            style={{ marginRight: 6 }}
+          />
           <Text style={BOLD_TEXT(14, COLORS.darkBlue)}>Add Pages</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.saveBtn}
           onPress={() => setShowSaveModal(true)}
           activeOpacity={0.8}
         >
-          <MaterialCommunityIcons name="file-pdf-box" size={22} color="white" style={{ marginRight: 6 }} />
+          <MaterialCommunityIcons
+            name="file-pdf-box"
+            size={22}
+            color="white"
+            style={{ marginRight: 6 }}
+          />
           <Text style={BOLD_TEXT(14, 'white')}>Save PDF</Text>
         </TouchableOpacity>
       </View>
@@ -251,7 +282,7 @@ export default function ScannerPreview() {
       >
         <View style={styles.fullscreenBg}>
           <SafeAreaView style={styles.fullscreenHeader}>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => setActiveImageIndex(null)}
               style={styles.closeFullBtn}
               hitSlop={15}
@@ -261,7 +292,7 @@ export default function ScannerPreview() {
             <Text style={BOLD_TEXT(16, 'white')}>
               Page {(activeImageIndex ?? 0) + 1} of {images.length}
             </Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => {
                 if (activeImageIndex !== null) {
                   const idx = activeImageIndex;
@@ -272,14 +303,18 @@ export default function ScannerPreview() {
               style={styles.deleteFullBtn}
               hitSlop={15}
             >
-              <MaterialCommunityIcons name="trash-can-outline" size={26} color="#FF3B30" />
+              <MaterialCommunityIcons
+                name="trash-can-outline"
+                size={26}
+                color="#FF3B30"
+              />
             </TouchableOpacity>
           </SafeAreaView>
-          
+
           <View style={styles.fullscreenBody}>
             {activeImageIndex !== null && (
-              <Image 
-                source={{ uri: images[activeImageIndex].uri }} 
+              <Image
+                source={{ uri: images[activeImageIndex].uri }}
                 style={styles.fullscreenImage}
                 resizeMode="contain"
               />
@@ -296,7 +331,12 @@ export default function ScannerPreview() {
             <Text style={[BOLD_TEXT(14, '#1C1C1E'), { marginTop: 15 }]}>
               Compiling Document...
             </Text>
-            <Text style={[REGULAR_TEXT(12, '#8E8E93'), { marginTop: 5, textAlign: 'center' }]}>
+            <Text
+              style={[
+                REGULAR_TEXT(12, '#8E8E93'),
+                { marginTop: 5, textAlign: 'center' },
+              ]}
+            >
               Building high-quality PDF from scanned sheets in pure JS
             </Text>
           </View>
@@ -313,10 +353,15 @@ export default function ScannerPreview() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={BOLD_TEXT(18, '#1C1C1E')}>Save Document</Text>
-            <Text style={[REGULAR_TEXT(13, '#8E8E93'), { marginTop: 4, marginBottom: 15 }]}>
+            <Text
+              style={[
+                REGULAR_TEXT(13, '#8E8E93'),
+                { marginTop: 4, marginBottom: 15 },
+              ]}
+            >
               Enter a name to save your document as a PDF.
             </Text>
-            
+
             <TextInput
               value={docName}
               onChangeText={setDocName}
@@ -328,13 +373,13 @@ export default function ScannerPreview() {
             />
 
             <View style={styles.modalActions}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.modalCancel}
                 onPress={() => setShowSaveModal(false)}
               >
                 <Text style={BOLD_TEXT(14, COLORS.gray)}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.modalSave}
                 onPress={handleSavePdf}
               >

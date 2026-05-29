@@ -1,4 +1,3 @@
-/* eslint-disable react-native/no-inline-styles */
 import {
   StyleSheet,
   Text,
@@ -19,8 +18,6 @@ import { COLORS } from '../../../theme/colors';
 import { ICONS } from '../../../theme/icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomGradientButton from '../../../components/buttons/CustomGradientButton';
-import ProgressModal from '../../../components/modals/ProgressModal';
-import SuccessDocUploadModal from '../../../components/modals/SuccessDocUploadModal';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import {
   formatDateTime,
@@ -35,7 +32,6 @@ import {
   getNearestKioskService,
   getPromotionVideoUrl,
   getUploadedDocumentListService,
-  uploadDocumentService,
   uploadDocumentServiceV2,
 } from '../../../service/authService';
 import { Kiosk } from '../kiosk/FindKioskScreen';
@@ -43,10 +39,7 @@ import Geolocation from '@react-native-community/geolocation';
 import { useDispatch, useSelector } from 'react-redux';
 import { showSnackbar } from '../../../redux/slices/snackbar.slice';
 import { SnackbarType } from '../../../types/common.types';
-import {
-  handleGenericDocumentPicker,
-  handleGenericMultiDocumentPicker,
-} from '../../../utils/uploadDocUtils';
+import { handleGenericMultiDocumentPicker } from '../../../utils/uploadDocUtils';
 import {
   getPrintPriceDataService,
   getUserProfileDataService,
@@ -56,19 +49,13 @@ import { RootState } from '../../../redux/store';
 import DashboardHeader2 from '../../../components/header/DashboardHeader2';
 import HowToUseCard from '../../../components/cards/HowToUseCard';
 import ReferralAnnouncementCard from '../../../components/cards/ReferralAnnouncementContainer';
-import ProfileIncompleteModal from '../../../components/modals/ProfileIncompleteModal';
 import { MultiProgressModal } from '../../../components/modals/MultiProgressModal';
 
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
-  const [uploadDocSuccessModalVisible, setUploadDocSuccessModalVisible] =
-    useState(false);
   const [showProgress, setShowProgress] = useState(false);
   const [uploadedDocumentResponse, setUploadedDocumentResponse] = useState({});
-  const [uploadedDocumentType, setUploadedDocumentType] = useState<
-    string | null
-  >(null); // image or pdf
   const [uploadDocList, setUploadDocList] = useState<any[]>([]);
   const [kioskList, setKioskList] = useState<Kiosk[]>([]);
 
@@ -76,7 +63,6 @@ export default function HomeScreen() {
 
   const [currentFile, setCurrentFile] = useState(0);
   const [totalFiles, setTotalFiles] = useState(0);
-  const [isFileProcessing, setIsFileProcessing] = useState(false);
 
   const [refreshing, setRefreshing] = React.useState(false);
 
@@ -172,57 +158,6 @@ export default function HomeScreen() {
     }
   };
 
-  // const handleDocumentPicker = async () => {
-  //   try {
-  //     const result = await handleGenericDocumentPicker();
-
-  //     if (!result) {
-  //       dispatch(
-  //         showSnackbar({
-  //           message: 'No document selected',
-  //           type: SnackbarType.error,
-  //         }),
-  //       );
-  //       return;
-  //     }
-
-  //     const {formData, fileType, fileName} = result;
-  //     setUploadedDocumentType(fileType);
-  //     formData.append('document_name', fileName || 'document.pdf');
-  //     setShowProgress(true);
-  //     setUploadProgress(0); // reset progress
-
-  //     const response = await uploadDocumentService(formData, progress => {
-  //       setUploadProgress(progress);
-  //     });
-
-  //     setUploadedDocumentResponse(response?.data);
-  //     // setUploadDocSuccessModalVisible(true);
-
-  //     navigation.navigate({
-  //       // name: 'PrintSpecsScreen',
-  //       name: 'MultiDocPrintSpecScreen',
-  //       params: {
-  //         amount: 100,
-  //         uploadedDocumentType: fileType,
-  //         uploadedDocumentResponse: response?.data,
-  //       },
-  //     } as never);
-  //   } catch (error: any) {
-  //     JSONOBJECTLOG(error);
-  //     const message = getErrorMessage(error);
-  //     Alert.alert('Opps!', message);
-  //     dispatch(
-  //       showSnackbar({
-  //         message: message,
-  //         type: SnackbarType.error,
-  //       }),
-  //     );
-  //   } finally {
-  //     setShowProgress(false);
-  //   }
-  // };
-
   // UI Functions - start with render
 
   const handleDocumentPicker = async () => {
@@ -255,9 +190,6 @@ export default function HomeScreen() {
 
         formData.append('document_name', fileName);
 
-        // console.log('formData');
-        // JSONOBJECTLOG(formData);
-
         try {
           const response = await uploadDocumentServiceV2(
             formData,
@@ -288,7 +220,6 @@ export default function HomeScreen() {
 
       // NAVIGATE WITH ARRAY
       navigation.navigate({
-        // name: 'PrintSpecsScreen',
         name: 'MultiDocPrintSpecScreen',
         params: {
           uploadedDocumentResponse: uploadedDocs,
@@ -312,7 +243,8 @@ export default function HomeScreen() {
 
       <TouchableOpacity
         style={styles.uploadCircle}
-        onPress={handleDocumentPicker}>
+        onPress={handleDocumentPicker}
+      >
         <Image
           source={ICONS.upload}
           style={{ width: '100%', height: '100%', objectFit: 'contain' }}
@@ -337,7 +269,12 @@ export default function HomeScreen() {
         </View>
         <View style={styles.scannerTextContainer}>
           <Text style={BOLD_TEXT(15, 'white')}>Open Scanner</Text>
-          <Text style={[REGULAR_TEXT(11, 'rgba(255, 255, 255, 0.8)'), { marginTop: 2 }]}>
+          <Text
+            style={[
+              REGULAR_TEXT(11, 'rgba(255, 255, 255, 0.8)'),
+              { marginTop: 2 },
+            ]}
+          >
             Scan sheets into clean PDFs instantly
           </Text>
         </View>
@@ -356,7 +293,8 @@ export default function HomeScreen() {
             hitSlop={15}
             onPress={() => {
               navigation.navigate('HistoryTabScreen' as never);
-            }}>
+            }}
+          >
             <Text style={BOLD_TEXT(13, COLORS.darkBlue)}>View All</Text>
           </TouchableOpacity>
         </View>
@@ -422,7 +360,11 @@ export default function HomeScreen() {
                 paddingHorizontal: 12,
                 backgroundColor: 'white',
               }}
-              labelStyle={{ fontSize: 11, color: 'black', fontWeight: 'normal' }}
+              labelStyle={{
+                fontSize: 11,
+                color: 'black',
+                fontWeight: 'normal',
+              }}
             />
           </View>
         ))}
@@ -437,7 +379,8 @@ export default function HomeScreen() {
         <View style={styles.kioskHeader}>
           <Text style={BOLD_TEXT(15, COLORS.gray)}>Nearest Kiosk</Text>
           <TouchableOpacity
-            onPress={() => navigation.navigate('FindKioskScreen' as never)}>
+            onPress={() => navigation.navigate('FindKioskScreen' as never)}
+          >
             <Text style={BOLD_TEXT(14, COLORS.darkBlue)}>View more</Text>
           </TouchableOpacity>
         </View>
@@ -470,7 +413,8 @@ export default function HomeScreen() {
                     }}
                   />
                   <Text
-                    style={[REGULAR_TEXT(12, COLORS.gray), { marginLeft: 5 }]}>
+                    style={[REGULAR_TEXT(12, COLORS.gray), { marginLeft: 5 }]}
+                  >
                     {metersToKilometers(kiosk?.distance_in_meters ?? 0)}
                   </Text>
                 </View>
@@ -505,7 +449,8 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: COLORS.mainBg, padding: 15 }}>
+      style={{ flex: 1, backgroundColor: COLORS.mainBg, padding: 15 }}
+    >
       <StatusBar barStyle={'dark-content'} backgroundColor={COLORS.mainBg} />
       <DashboardHeader2 />
       <ScrollView
@@ -518,7 +463,8 @@ export default function HomeScreen() {
               getUploadedDocumentList();
             }}
           />
-        }>
+        }
+      >
         {renderUploadContainer()}
         {renderScannerCard()}
         <HowToUseCard howToUseVideoLink={howToUseVideoLink} />
@@ -528,39 +474,6 @@ export default function HomeScreen() {
       </ScrollView>
       <View style={{ height: 60 }} />
 
-      <SuccessDocUploadModal
-        visible={uploadDocSuccessModalVisible}
-        onClose={() => {
-          setUploadedDocumentResponse({});
-          setUploadDocSuccessModalVisible(false);
-        }}
-        image={ICONS.check}
-        onButtonPress={() => {
-          setUploadDocSuccessModalVisible(false);
-          navigation.navigate({
-            name: 'PrintSpecsScreen',
-            params: {
-              amount: 100,
-              uploadedDocumentType: uploadedDocumentType,
-              uploadedDocumentResponse: uploadedDocumentResponse,
-            },
-          } as never);
-        }}
-        title="Documents Uploaded successfully!"
-        description="To continue, select 'Next' to complete the payment. Cancelling now will result in your document not being saved"
-      />
-
-      {/* <ProgressModal
-        visible={showProgress}
-        progress={uploadProgress}
-        onCancel={() => setShowProgress(false)}
-        onComplete={() => {
-          setShowProgress(false);
-          setUploadDocSuccessModalVisible(true);
-          console.log('Task Completed!');
-          setUploadProgress(0);
-        }}
-      /> */}
       <MultiProgressModal
         visible={showProgress}
         currentFile={currentFile}
@@ -568,17 +481,6 @@ export default function HomeScreen() {
         progress={uploadProgress}
         onCancel={() => setShowProgress(false)}
       />
-
-      {/* {userData?.user_name && <ProfileIncompleteModal
-        visible={showInCompleteProfileModal}
-        onClose={() => {
-          setChoosePaymentMethodModalVisible(false);
-        }}
-        onProceed={() => {
-          setChoosePaymentMethodModalVisible(false);
-          navigation.navigate('ProfileScreen' as never);
-        }}
-      />} */}
     </SafeAreaView>
   );
 }
