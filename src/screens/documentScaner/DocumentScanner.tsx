@@ -8,7 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { launchScanner } from '@dariyd/react-native-document-scanner';
@@ -22,9 +22,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function DocumentScanner() {
   const navigation = useNavigation();
+  const route = useRoute();
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [hasLaunched, setHasLaunched] = useState(false);
+
+  // If coming from MultiDocPrintSpecScreen, we pass returnTo so ScannerPreview
+  // knows to upload + navigate back there after saving
+  const returnTo = (route.params as any)?.returnTo;
 
   const startScanning = async () => {
     if (loading) return;
@@ -54,6 +59,7 @@ export default function DocumentScanner() {
         // Navigate to preview screen with scanned images
         (navigation.navigate as any)('ScannerPreview', {
           images: result.images,
+          returnTo: returnTo,
         });
       } else {
         navigation.goBack();

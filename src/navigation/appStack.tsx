@@ -31,6 +31,7 @@ import SupportChatScreen from '../screens/appScreens/supportScreens/SupportChatS
 import DocumentScanner from '../screens/documentScaner/DocumentScanner';
 import ScannerPreview from '../screens/documentScaner/ScannerPreview';
 import DocumentListScreen from '../screens/documentScaner/DocumentListScreen';
+import ScannedDocPickerScreen from '../screens/documentScaner/ScannedDocPickerScreen';
 
 const Stack = createStackNavigator();
 
@@ -189,6 +190,14 @@ const MyScreens = [
     id: '214',
     name: 'DocumentListScreen',
     component: DocumentListScreen,
+    option: {
+      cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+    },
+  },
+  {
+    id: '215',
+    name: 'ScannedDocPickerScreen',
+    component: ScannedDocPickerScreen,
     option: {
       cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
     },

@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
+  DeviceEventEmitter,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
@@ -28,6 +29,9 @@ import { SnackbarType } from '../../types/common.types';
 import { generatePdfFromImages } from './pdfGenerator';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { addScannedDoc } from '../../utils/scannedDocsStorage';
+import { uploadDocumentServiceV2 } from '../../service/authService';
+import { getFileTypeFromUrl } from '../../utils/uploadDocUtils';
+import { getErrorMessage } from '../../utils/utils';
 
 const { width } = Dimensions.get('window');
 const COLUMN_WIDTH = (width - 48) / 2; // 2 column grid
@@ -39,6 +43,7 @@ export default function ScannerPreview() {
 
   // Initial scanned images passed from DocumentScanner screen
   const initialImages = (route.params as any)?.images || [];
+  const returnTo = (route.params as any)?.returnTo;
   const [images, setImages] = useState<any[]>(initialImages);
 
   // States
@@ -158,8 +163,51 @@ export default function ScannerPreview() {
         }),
       );
 
-      // Navigate to Scanned Documents List Screen
-      navigation.navigate('DocumentListScreen' as never);
+      if (returnTo) {
+        // Coming from MultiDocPrintSpecScreen — upload PDF to server, then pop back
+        try {
+          const fileUri = path.startsWith('file://') ? path : `file://${path}`;
+
+          const formData = new FormData();
+          formData.append('document', {
+            uri: fileUri,
+            name: finalDocName,
+            type: 'application/pdf',
+          } as any);
+          formData.append('document_name', finalDocName);
+
+          const response = await uploadDocumentServiceV2(formData);
+          const docData = response?.data;
+
+          const newDoc = {
+            id: Date.now().toString(),
+            ...docData,
+            uri: docData.preview_link,
+            fileName: docData.document_name || finalDocName,
+            fileType: docData.file_type,
+            processFileType: getFileTypeFromUrl(docData.document_link),
+            number_of_pages: docData.number_of_copies,
+          };
+
+          // Emit event so MultiDocPreviewCarousel picks it up, then pop back
+          // Pop 2 screens: ScannerPreview → DocumentScanner → MultiDocPrintSpecScreen
+          DeviceEventEmitter.emit('ADD_SCANNED_DOC_TO_PRINT', newDoc);
+          navigation.pop(2);
+        } catch (uploadError) {
+          console.error('Error uploading scanned PDF:', uploadError);
+          const msg = getErrorMessage(uploadError);
+          dispatch(
+            showSnackbar({
+              message: `Saved locally but upload failed: ${msg}`,
+              type: SnackbarType.error,
+            }),
+          );
+          navigation.navigate('DocumentListScreen' as never);
+        }
+      } else {
+        // Normal flow — go to Scanned Documents List Screen
+        navigation.navigate('DocumentListScreen' as never);
+      }
     } catch (error) {
       console.error('Error generating PDF:', error);
       dispatch(

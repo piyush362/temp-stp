@@ -31,6 +31,9 @@ import {
   removeScannedDoc,
   ScannedDocItem,
 } from '../../utils/scannedDocsStorage';
+import { uploadDocumentServiceV2 } from '../../service/authService';
+import { MultiProgressModal } from '../../components/modals/MultiProgressModal';
+import { getErrorMessage } from '../../utils/utils';
 
 const { width } = Dimensions.get('window');
 
@@ -47,6 +50,12 @@ export default function DocumentListScreen() {
     path: string;
   } | null>(null);
   const [isViewerVisible, setIsViewerVisible] = useState(false);
+
+  // Upload progress states (mirrors HomeScreen pattern)
+  const [showProgress, setShowProgress] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [currentFile, setCurrentFile] = useState(0);
+  const [totalFiles, setTotalFiles] = useState(0);
 
   // Load docs from AsyncStorage on every screen focus
   useFocusEffect(
@@ -163,14 +172,56 @@ export default function DocumentListScreen() {
     }
   };
 
-  const handleUploadAndGetCode = (pdf: any) => {
-    // TODO: Implement upload and get print code in next step
-    dispatch(
-      showSnackbar({
-        message: 'Upload & Print Code coming soon!',
-        type: SnackbarType.success,
-      }),
-    );
+  const handleUploadAndGetCode = async (pdf: ScannedDocItem) => {
+    try {
+      // Build the file URI for FormData
+      const cleanPath = pdf.path.startsWith('file://')
+        ? pdf.path
+        : `file://${pdf.path}`;
+
+      // Build FormData just like HomeScreen does for gallery uploads
+      const formData = new FormData();
+      formData.append('document', {
+        uri: cleanPath,
+        name: pdf.name,
+        type: 'application/pdf',
+      } as any);
+      formData.append('document_name', pdf.name);
+
+      // Show upload progress
+      setShowProgress(true);
+      setUploadProgress(0);
+      setTotalFiles(1);
+      setCurrentFile(1);
+
+      const response = await uploadDocumentServiceV2(
+        formData,
+        (progress: number) => setUploadProgress(progress),
+      );
+
+      const uploadedDocs = [
+        {
+          id: Date.now().toString(),
+          ...response.data,
+          fileType: 'pdf',
+        },
+      ];
+
+      setShowProgress(false);
+
+      // Navigate to MultiDocPrintSpecScreen — same as HomeScreen
+      (navigation.navigate as any)({
+        name: 'MultiDocPrintSpecScreen',
+        params: {
+          uploadedDocumentResponse: uploadedDocs,
+        },
+      });
+    } catch (error) {
+      console.error('Error uploading scanned PDF:', error);
+      setShowProgress(false);
+      const msg = getErrorMessage(error);
+      dispatch(showSnackbar({ message: msg, type: SnackbarType.error }));
+    }
   };
 
   const formatSize = (bytes: number) => {
@@ -378,6 +429,15 @@ export default function DocumentListScreen() {
           )}
         </SafeAreaView>
       </Modal>
+
+      {/* Upload Progress Modal — same component as HomeScreen */}
+      <MultiProgressModal
+        visible={showProgress}
+        currentFile={currentFile}
+        totalFiles={totalFiles}
+        progress={uploadProgress}
+        onCancel={() => setShowProgress(false)}
+      />
     </SafeAreaView>
   );
 }

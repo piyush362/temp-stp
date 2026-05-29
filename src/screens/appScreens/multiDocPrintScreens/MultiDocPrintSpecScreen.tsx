@@ -51,7 +51,7 @@ export default function MultiDocPrintSpecScreen() {
   const [count, setCount] = useState(1);
   const [pageLength, setPageLength] = useState(1);
 
-  const { uploadedDocumentResponse } = route.params ?? {};
+  const { uploadedDocumentResponse, addToExisting } = route.params ?? {};
 
   const { printPrice, printPriceV2 } = useSelector(
     (state: RootState) => state.auth,
@@ -91,7 +91,12 @@ export default function MultiDocPrintSpecScreen() {
         };
       });
 
-      setDocuments(formattedDocs); // 👈 SET ALL DOCS AT ONCE
+      if (addToExisting) {
+        // Append to existing documents (coming from ScannedDocPicker or scan flow)
+        setDocuments(prev => [...prev, ...formattedDocs]);
+      } else {
+        setDocuments(formattedDocs); // 👈 SET ALL DOCS AT ONCE
+      }
     }
   }, [uploadedDocumentResponse]);
 

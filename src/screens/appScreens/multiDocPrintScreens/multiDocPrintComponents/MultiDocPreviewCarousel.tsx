@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Dimensions,
   Alert,
+  DeviceEventEmitter,
 } from 'react-native';
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -22,22 +23,24 @@ import {
   handleGenericDocumentPicker,
   handleGenericMultiDocumentPicker,
 } from '../../../../utils/uploadDocUtils';
-import {COLORS} from '../../../../theme/colors';
+import { COLORS } from '../../../../theme/colors';
 
-import {Grayscale} from 'react-native-color-matrix-image-filters';
-import {BOLD_TEXT, REGULAR_TEXT} from '../../../../theme/styles.global';
-import {useDispatch} from 'react-redux';
-import {showSnackbar} from '../../../../redux/slices/snackbar.slice';
+import { Grayscale } from 'react-native-color-matrix-image-filters';
+import { BOLD_TEXT, REGULAR_TEXT } from '../../../../theme/styles.global';
+import { useDispatch } from 'react-redux';
+import { showSnackbar } from '../../../../redux/slices/snackbar.slice';
 import ProgressModal from '../../../../components/modals/ProgressModal';
 import {
   getErrorMessage,
   getErrors,
   JSONOBJECTLOG,
 } from '../../../../utils/utils';
-import {SnackbarType} from '../../../../types/common.types';
-import {MultiProgressModal} from '../../../../components/modals/MultiProgressModal';
+import { SnackbarType } from '../../../../types/common.types';
+import { MultiProgressModal } from '../../../../components/modals/MultiProgressModal';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import DocSourcePickerModal from '../../../../components/modals/DocSourcePickerModal';
 
-const {width: screenWidth} = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
 
 interface Props {
   data: any;
@@ -58,6 +61,7 @@ export default function MultiDocPreviewCarousel({
 }: Props) {
   const [adding, setAdding] = useState(false);
   const dispatch = useDispatch();
+  const navigation = useNavigation();
   const listRef = useRef<any>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showProgress, setShowProgress] = useState(false);
@@ -65,6 +69,26 @@ export default function MultiDocPreviewCarousel({
   const [currentFile, setCurrentFile] = useState(0);
   const [totalFiles, setTotalFiles] = useState(0);
   const [isFileProcessing, setIsFileProcessing] = useState(false);
+  const [showDocSourceModal, setShowDocSourceModal] = useState(false);
+
+  // Listen for docs added from ScannedDocPickerScreen or ScannerPreview
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener(
+      'ADD_SCANNED_DOC_TO_PRINT',
+      (doc: any) => {
+        onAdd(doc);
+      },
+    );
+    return () => subscription.remove();
+  }, [onAdd]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setTimeout(() => {
+        listRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }, [data]),
+  );
 
   // =====================================================
   //  ORIENTATION – IMAGE CONTAINER
@@ -101,7 +125,7 @@ export default function MultiDocPreviewCarousel({
     if (orientation === 'landscape') {
       return {
         ...base,
-        transform: [{rotate: '90deg'}],
+        transform: [{ rotate: '90deg' }],
       };
     }
 
@@ -124,7 +148,7 @@ export default function MultiDocPreviewCarousel({
 
   const handleRemove = (item: any) => {
     if (data?.length === 1) {
-      dispatch(showSnackbar({message: 'At least one document is required'}));
+      dispatch(showSnackbar({ message: 'At least one document is required' }));
       Alert.alert(
         'Opps!',
         'At least one document is required, Can not remove 1st document',
@@ -214,7 +238,7 @@ export default function MultiDocPreviewCarousel({
 
       // LOOP UPLOAD
       for (let i = 0; i < pickedFiles.length; i++) {
-        const {formData, fileName} = pickedFiles[i];
+        const { formData, fileName } = pickedFiles[i];
         formData.append('document_name', fileName);
 
         // console.log('formData 2.0');
@@ -273,17 +297,16 @@ export default function MultiDocPreviewCarousel({
           alignItems: 'center',
           width: '98%',
           marginBottom: 10,
-        }}>
-        <View style={{width: '70%'}}>
+        }}
+      >
+        <View style={{ width: '70%' }}>
           <Text
-            style={[
-              REGULAR_TEXT(12, COLORS.gray),
-            ]}>{`Total Selected Files: ${data.length}`}</Text>
+            style={[REGULAR_TEXT(12, COLORS.gray)]}
+          >{`Total Selected Files: ${data.length}`}</Text>
           {adding ? (
             <Text
-              style={[
-                REGULAR_TEXT(11, 'green'),
-              ]}>{`Your files are being processed...`}</Text>
+              style={[REGULAR_TEXT(11, 'green')]}
+            >{`Your files are being processed...`}</Text>
           ) : (
             <Text style={[REGULAR_TEXT(11, 'green')]}>
               You can select multiple files on add files
@@ -291,7 +314,7 @@ export default function MultiDocPreviewCarousel({
           )}
         </View>
         <TouchableOpacity
-          onPress={pickAndAddDocument}
+          onPress={() => setShowDocSourceModal(true)}
           disabled={adding}
           hitSlop={10}
           style={{
@@ -299,7 +322,8 @@ export default function MultiDocPreviewCarousel({
             paddingHorizontal: 15,
             paddingVertical: 5,
             borderRadius: 10,
-          }}>
+          }}
+        >
           <Text style={[BOLD_TEXT(12, 'white')]}>+ Add Files</Text>
         </TouchableOpacity>
       </View>
@@ -311,16 +335,17 @@ export default function MultiDocPreviewCarousel({
   // =====================================================
   const renderAddCard = () => (
     <TouchableOpacity
-      style={[styles.addPage, {width: cardWidth}]}
+      style={[styles.addPage, { width: cardWidth }]}
       onPress={pickAndAddDocument}
       disabled={adding}
-      activeOpacity={0.8}>
+      activeOpacity={0.8}
+    >
       {adding ? (
         <ActivityIndicator size="small" color="#4f2e2c" />
       ) : (
         <>
           <Icon name="plus" size={40} color="#4f2e2c" />
-          <Text style={{color: '#4f2e2c', marginTop: 6}}>Add File</Text>
+          <Text style={{ color: '#4f2e2c', marginTop: 6 }}>Add File</Text>
         </>
       )}
     </TouchableOpacity>
@@ -337,7 +362,7 @@ export default function MultiDocPreviewCarousel({
       return (
         <Grayscale>
           <View style={imageContainerStyle}>
-            <Image source={{uri: bwPreviewLink}} style={imageStyle} />
+            <Image source={{ uri: bwPreviewLink }} style={imageStyle} />
           </View>
         </Grayscale>
       );
@@ -345,7 +370,7 @@ export default function MultiDocPreviewCarousel({
 
     return (
       <View style={imageContainerStyle}>
-        <Image source={{uri: previewLink}} style={imageStyle} />
+        <Image source={{ uri: previewLink }} style={imageStyle} />
       </View>
     );
   };
@@ -364,10 +389,11 @@ export default function MultiDocPreviewCarousel({
       <View
         style={[
           imageContainerStyle,
-          {alignItems: 'center', justifyContent: 'center'},
-        ]}>
+          { alignItems: 'center', justifyContent: 'center' },
+        ]}
+      >
         <Icon name="file-pdf-box" size={60} color="#b00" />
-        <Text style={{fontSize: 12}}>PDF Preview Not Available</Text>
+        <Text style={{ fontSize: 12 }}>PDF Preview Not Available</Text>
       </View>
     );
   };
@@ -379,13 +405,14 @@ export default function MultiDocPreviewCarousel({
     const isPdf = item.fileType === 'pdf';
 
     return (
-      <View style={[styles.cardWrapper, {width: cardWidth}]}>
+      <View style={[styles.cardWrapper, { width: cardWidth }]}>
         <TouchableOpacity
           style={styles.removeBtn}
           onPress={() => {
             handleRemove(item);
           }}
-          hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Icon name="close" size={18} color="#fff" />
         </TouchableOpacity>
 
@@ -416,7 +443,7 @@ export default function MultiDocPreviewCarousel({
         ref={listRef}
         data={data}
         horizontal
-        renderItem={({item}) =>
+        renderItem={({ item }) =>
           item.type === 'add-btn' ? renderAddCard() : renderCard(item)
         }
         keyExtractor={item => item.id}
@@ -437,6 +464,23 @@ export default function MultiDocPreviewCarousel({
         totalFiles={totalFiles}
         progress={uploadProgress}
         onCancel={() => setShowProgress(false)}
+      />
+
+      {/* Doc Source Picker Modal */}
+      <DocSourcePickerModal
+        visible={showDocSourceModal}
+        onClose={() => setShowDocSourceModal(false)}
+        onPickGallery={() => {
+          pickAndAddDocument();
+        }}
+        onPickScannedDocs={() => {
+          (navigation.navigate as any)('ScannedDocPickerScreen');
+        }}
+        onScanNewDoc={() => {
+          (navigation.navigate as any)('DocumentScanner', {
+            returnTo: 'MultiDocPrintSpecScreen',
+          });
+        }}
       />
     </View>
   );
