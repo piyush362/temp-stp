@@ -22,10 +22,6 @@ export const REFUND_POLICY_LINK =
   'https://www.stapples.in/refund-policy?appView=true';
 
 // razorpay
-
-// Key-id: rzp_test_RQ8UAoI4nEttmQ
-// Secret:  3egvyZWYMzaK43lhRsLljpDQ
-
 // export const RAZORPAY_KEY = 'rzp_test_RQ8UAoI4nEttmQ';
 // export const RAZORPAY_SECRET = '3egvyZWYMzaK43lhRsLljpDQ';
 

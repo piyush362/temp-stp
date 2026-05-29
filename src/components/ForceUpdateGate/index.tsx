@@ -39,14 +39,14 @@ const ForceUpdateGate = ({ children }: any) => {
         } catch (e) {
             console.log('Version check failed', e);
             setForceUpdate(false);
-        } 
+        }
     };
 
     return (
         <>
             {children}
 
-            <Modal visible={forceUpdate} transparent animationType="fade" onRequestClose={() => {}} >
+            <Modal visible={forceUpdate} transparent animationType="fade" onRequestClose={() => { }} >
                 <View style={styles.overlay}>
                     <View style={styles.modalContainer}>
                         <Text style={styles.title}>Update Required</Text>
