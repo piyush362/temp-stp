@@ -9,22 +9,22 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import React, {useCallback, useEffect, useState} from 'react';
-import {COLORS} from '../../../theme/colors';
-import {ICONS} from '../../../theme/icons';
-import {BOLD_TEXT, REGULAR_TEXT} from '../../../theme/styles.global';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import React, { useCallback, useEffect, useState } from 'react';
+import { COLORS } from '../../../theme/colors';
+import { ICONS } from '../../../theme/icons';
+import { BOLD_TEXT, REGULAR_TEXT } from '../../../theme/styles.global';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import DashboardHeader from '../../../components/header/DashboardHeader';
-import {getUploadedDocumentListService} from '../../../service/authService';
+import { getUploadedDocumentListService } from '../../../service/authService';
 import {
   formatDateTime,
   JSONOBJECTLOG,
   truncateString,
 } from '../../../utils/utils';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
-import {useDispatch} from 'react-redux';
-import {showSnackbar} from '../../../redux/slices/snackbar.slice';
-import {SnackbarType} from '../../../types/common.types';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
+import { showSnackbar } from '../../../redux/slices/snackbar.slice';
+import { SnackbarType } from '../../../types/common.types';
 import DashboardHeader2 from '../../../components/header/DashboardHeader2';
 
 export default function HistoryScreen() {
@@ -82,7 +82,7 @@ export default function HistoryScreen() {
       return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={[REGULAR_TEXT(14, COLORS.primary), {marginTop: 10}]}>
+          <Text style={[REGULAR_TEXT(14, COLORS.primary), { marginTop: 10 }]}>
             Loading history...
           </Text>
         </View>
@@ -122,15 +122,16 @@ export default function HistoryScreen() {
               }
             }}
             key={kiosk?.kiosk_documents_id}
-            style={styles.kioskItem}>
+            style={styles.kioskItem}
+          >
             <View style={styles.kioskIcon}>
               <Image
-                source={ICONS.kiosk}
-                style={{width: 40, height: 40, objectFit: 'contain'}}
+                source={ICONS.uploadIcon}
+                style={{ width: 40, height: 40, objectFit: 'contain' }}
               />
             </View>
-            <View style={{flex: 1}}>
-              <Text style={[REGULAR_TEXT(13), {width: '70%'}]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[REGULAR_TEXT(13), { width: '70%' }]}>
                 {`${truncateString(
                   kiosk?.document_name ?? 'Document Name',
                   20,
@@ -155,8 +156,11 @@ export default function HistoryScreen() {
                 }
               }}
               hitSlop={10}
-              style={styles.mapButton}>
-              <Text style={[BOLD_TEXT(13, COLORS.gray), {textAlign: 'right'}]}>
+              style={styles.mapButton}
+            >
+              <Text
+                style={[BOLD_TEXT(13, COLORS.gray), { textAlign: 'right' }]}
+              >
                 {`Rs. ${Number(kiosk?.charges ?? 0).toFixed(2)}`}
               </Text>
               {/* <Text style={REGULAR_TEXT(12, '#6C63FF')}>View Details</Text> */}
@@ -174,15 +178,17 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView
-      style={{flex: 1, backgroundColor: COLORS.mainBg, padding: 15}}>
+      style={{ flex: 1, backgroundColor: COLORS.mainBg, padding: 15 }}
+    >
       <StatusBar barStyle={'dark-content'} backgroundColor={COLORS.mainBg} />
       <DashboardHeader2 />
       <ScrollView
         contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         {renderHistoryList()}
       </ScrollView>
-      <View style={{height: 60}} />
+      <View style={{ height: 60 }} />
     </SafeAreaView>
   );
 }
