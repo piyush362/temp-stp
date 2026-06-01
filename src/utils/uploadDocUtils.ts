@@ -336,6 +336,8 @@ export const handleGenericMultiDocumentPicker = async () => {
         formData,
         fileType,
         fileName,
+        uri: fileUri,
+        mimeType,
       });
     }
 

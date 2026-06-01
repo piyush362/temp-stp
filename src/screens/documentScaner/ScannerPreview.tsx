@@ -26,7 +26,7 @@ import { showSnackbar } from '../../redux/slices/snackbar.slice';
 import { COLORS } from '../../theme/colors';
 import { BOLD_TEXT, REGULAR_TEXT } from '../../theme/styles.global';
 import { SnackbarType } from '../../types/common.types';
-import { generatePdfFromImages } from './pdfGenerator';
+import { generatePdfFromImagesV2 } from './pdfGenerator';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { addScannedDoc } from '../../utils/scannedDocsStorage';
 import { uploadDocumentServiceV2 } from '../../service/authService';
@@ -132,7 +132,7 @@ export default function ScannerPreview() {
         : `${docName}.pdf`;
 
       // Compile PDF locally in pure JS
-      const path = await generatePdfFromImages(images, finalDocName);
+      const path = await generatePdfFromImagesV2(images, finalDocName);
 
       // Get file details for Redux
       const cleanPath = path.startsWith('file://')

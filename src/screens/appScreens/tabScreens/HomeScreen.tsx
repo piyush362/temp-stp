@@ -40,6 +40,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { showSnackbar } from '../../../redux/slices/snackbar.slice';
 import { SnackbarType } from '../../../types/common.types';
 import { handleGenericMultiDocumentPicker } from '../../../utils/uploadDocUtils';
+import { generatePdfFromImagesV2 } from '../../documentScaner/pdfGenerator';
 import {
   getPrintPriceDataService,
   getUserProfileDataService,
@@ -50,6 +51,7 @@ import DashboardHeader2 from '../../../components/header/DashboardHeader2';
 import HowToUseCard from '../../../components/cards/HowToUseCard';
 import ReferralAnnouncementCard from '../../../components/cards/ReferralAnnouncementContainer';
 import { MultiProgressModal } from '../../../components/modals/MultiProgressModal';
+import DocScannerBetaInfoModal from '../../../components/modals/DocScannerBetaInfoModal';
 
 const { width } = Dimensions.get('window');
 
@@ -73,6 +75,8 @@ export default function HomeScreen() {
   );
 
   const [_showInCompleteProfileModal, setShowInCompleteProfileModal] =
+    useState(false);
+  const [showScannerBetaInfoModal, setShowScannerBetaInfoModal] =
     useState(false);
 
   const navigation = useNavigation();
@@ -175,18 +179,91 @@ export default function HomeScreen() {
         return;
       }
 
+      let finalResults = [...results];
+      const imagesToCombine = results.filter(r => r.fileType === 'image');
+
+      if (imagesToCombine.length > 1) {
+        const shouldCombine = await new Promise<boolean>((resolve) => {
+          Alert.alert(
+            'Combine Images',
+            'Do you want to combine all images in 1 pdf to get single staples code?\n\nThis combination applies only on images, not pdf.',
+            [
+              {
+                text: 'No',
+                onPress: () => resolve(false),
+                style: 'cancel',
+              },
+              {
+                text: 'Yes',
+                onPress: () => resolve(true),
+              },
+            ],
+            { cancelable: false },
+          );
+        });
+
+        if (shouldCombine) {
+          try {
+            const dateStr = new Date().toLocaleDateString().replace(/\//g, '-');
+            const timeStr = new Date()
+              .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              .replace(/:/g, '-');
+            const combinedPdfName = `Combined_Images_${dateStr}_${timeStr.replace(/\s+/g, '')}.pdf`;
+
+            const scannedImages = imagesToCombine.map(img => ({
+              uri: img.uri,
+              width: 0,
+              height: 0,
+            }));
+
+            const combinedPdfPath = await generatePdfFromImagesV2(
+              scannedImages,
+              combinedPdfName,
+            );
+
+            const combinedPdfUri = combinedPdfPath.startsWith('file://')
+              ? combinedPdfPath
+              : `file://${combinedPdfPath}`;
+
+            const combinedFormData = new FormData();
+            combinedFormData.append('document', {
+              uri: combinedPdfUri,
+              name: combinedPdfName,
+              type: 'application/pdf',
+            } as any);
+
+            const combinedResultEntry = {
+              formData: combinedFormData,
+              fileType: 'pdf',
+              fileName: combinedPdfName,
+              uri: combinedPdfUri,
+              mimeType: 'application/pdf',
+            };
+
+            const otherResults = results.filter(r => r.fileType !== 'image');
+            finalResults = [combinedResultEntry, ...otherResults];
+          } catch (pdfError) {
+            console.error('Failed to combine images into PDF', pdfError);
+            Alert.alert(
+              'Error',
+              'Failed to combine images. Uploading files individually.',
+            );
+          }
+        }
+      }
+
       // PROGRESS SETUP
       setUploadedDocumentResponse([]); // 👈 make array
       setShowProgress(true);
       setUploadProgress(0);
-      setTotalFiles(results.length);
+      setTotalFiles(finalResults.length);
       setCurrentFile(1);
 
       const uploadedDocs: any[] = [];
 
       // LOOP THROUGH FILES
-      for (let i = 0; i < results.length; i++) {
-        const { formData, fileType, fileName } = results[i];
+      for (let i = 0; i < finalResults.length; i++) {
+        const { formData, fileType, fileName } = finalResults[i];
 
         formData.append('document_name', fileName);
 
@@ -268,15 +345,30 @@ export default function HomeScreen() {
           <MaterialCommunityIcons name="scanner" size={26} color="white" />
         </View>
         <View style={styles.scannerTextContainer}>
-          <Text style={BOLD_TEXT(15, 'white')}>Open Scanner</Text>
+          <View style={styles.titleRow}>
+            <Text style={BOLD_TEXT(15, 'white')}>Document Scanner</Text>
+            <View style={styles.betaBadge}>
+              <Text style={BOLD_TEXT(9, COLORS.bg2)}>BETA</Text>
+            </View>
+          </View>
           <Text
             style={[
               REGULAR_TEXT(11, 'rgba(255, 255, 255, 0.8)'),
-              { marginTop: 2 },
+              { marginTop: 2, marginBottom: 4 },
             ]}
           >
             Scan sheets into clean PDFs instantly
           </Text>
+          <TouchableOpacity
+            style={styles.knowMoreButton}
+            onPress={() => setShowScannerBetaInfoModal(true)}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="information-outline" size={14} color="white" />
+            <Text style={[BOLD_TEXT(11, 'white'), { marginLeft: 4 }]}>
+              Know More
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
       <MaterialIcons name="chevron-right" size={24} color="white" />
@@ -481,6 +573,11 @@ export default function HomeScreen() {
         progress={uploadProgress}
         onCancel={() => setShowProgress(false)}
       />
+
+      <DocScannerBetaInfoModal
+        visible={showScannerBetaInfoModal}
+        onClose={() => setShowScannerBetaInfoModal(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -606,5 +703,26 @@ const styles = StyleSheet.create({
   },
   scannerTextContainer: {
     flex: 1,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  betaBadge: {
+    backgroundColor: 'white',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  knowMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
 });

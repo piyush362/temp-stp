@@ -1,14 +1,14 @@
-// PRODUCTION URLS
-export const BASEURL = 'https://prod-user-api.stapples.in';
-export const RAZORPAY_KEY = 'rzp_live_RRl7SdeTIHaKIW';
+// // PRODUCTION URLS
+// export const BASEURL = 'https://prod-user-api.stapples.in';
+// export const RAZORPAY_KEY = 'rzp_live_RRl7SdeTIHaKIW';
 
 //
 // ===================================================
 //
 
 // DEVELOPMENT URL
-// export const BASEURL = 'https://dev-user-api.stapples.in';
-// export const RAZORPAY_KEY = 'rzp_test_RQ8UAoI4nEttmQ';
+export const BASEURL = 'https://dev-user-api.stapples.in';
+export const RAZORPAY_KEY = 'rzp_test_RQ8UAoI4nEttmQ';
 
 // Google API
 export const GOOGLE_API = 'AIzaSyDX2-Yi8VRGD0T49b2fkzFs8SacTa1ij9I';

@@ -1,4 +1,5 @@
 import ReactNativeBlobUtil from 'react-native-blob-util';
+import { Image } from 'react-native';
 
 export interface ScannedImage {
   uri: string;
@@ -131,6 +132,169 @@ export async function generatePdfFromImages(
     
     // Image Object wrapping the binary JPEG data
     const headerText = `${imageObjNum} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imgBytes.length} >>\nstream\n`;
+    const headerBytes = stringToUint8Array(headerText);
+    const footerBytes = stringToUint8Array(`\nendstream\nendobj\n`);
+    
+    const imageObjectBytes = new Uint8Array(headerBytes.length + imgBytes.length + footerBytes.length);
+    imageObjectBytes.set(headerBytes, 0);
+    imageObjectBytes.set(imgBytes, headerBytes.length);
+    imageObjectBytes.set(footerBytes, headerBytes.length + imgBytes.length);
+    
+    objects.push(pageBytes);      // pageObjNum
+    objects.push(contentBytes);   // contentObjNum
+    objects.push(imageObjectBytes); // imageObjNum
+  }
+
+  // Header
+  const header = stringToUint8Array("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+  
+  // Calculate running byte offsets for every object
+  const offsets: number[] = [];
+  let currentOffset = header.length;
+  for (let i = 0; i < objects.length; i++) {
+    offsets.push(currentOffset);
+    currentOffset += objects[i].length;
+  }
+  
+  // xref and trailer
+  let xrefText = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let i = 0; i < offsets.length; i++) {
+    const offStr = String(offsets[i]).padStart(10, '0');
+    xrefText += `${offStr} 00000 n \n`;
+  }
+  
+  const startXrefOffset = currentOffset;
+  const trailerText = `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${startXrefOffset}\n%%EOF\n`;
+  
+  const xrefBytes = stringToUint8Array(xrefText + trailerText);
+  
+  // Concatenate all parts
+  let totalLength = header.length + xrefBytes.length;
+  for (let i = 0; i < objects.length; i++) {
+    totalLength += objects[i].length;
+  }
+  
+  const finalPdfBytes = new Uint8Array(totalLength);
+  let pos = 0;
+  finalPdfBytes.set(header, pos);
+  pos += header.length;
+  for (let i = 0; i < objects.length; i++) {
+    finalPdfBytes.set(objects[i], pos);
+    pos += objects[i].length;
+  }
+  finalPdfBytes.set(xrefBytes, pos);
+  
+  // Encode to base64
+  const pdfBase64 = encodeBase64(finalPdfBytes);
+  
+  // Write the file locally
+  const outputPath = `${ReactNativeBlobUtil.fs.dirs.DocumentDir}/${outputFileName}`;
+  await ReactNativeBlobUtil.fs.writeFile(outputPath, pdfBase64, 'base64');
+  
+  return outputPath;
+}
+
+const getImageSize = (uri: string): Promise<{ width: number; height: number }> => {
+  return new Promise((resolve) => {
+    Image.getSize(
+      uri,
+      (width, height) => resolve({ width, height }),
+      () => resolve({ width: 0, height: 0 })
+    );
+  });
+};
+
+const fitImageToA4 = (imgWidth: number, imgHeight: number) => {
+  const maxWidth = 595;
+  const maxHeight = 842;
+  
+  if (imgWidth <= 0 || imgHeight <= 0) {
+    return { pageWidth: maxWidth, pageHeight: maxHeight };
+  }
+  
+  const imgRatio = imgWidth / imgHeight;
+  const pageRatio = maxWidth / maxHeight;
+  
+  let pageWidth, pageHeight;
+  if (imgRatio > pageRatio) {
+    pageWidth = maxWidth;
+    pageHeight = Math.round(maxWidth / imgRatio);
+  } else {
+    pageHeight = maxHeight;
+    pageWidth = Math.round(maxHeight * imgRatio);
+  }
+  return { pageWidth, pageHeight };
+};
+
+export async function generatePdfFromImagesV2(
+  images: ScannedImage[],
+  outputFileName: string
+): Promise<string> {
+  if (!images || images.length === 0) {
+    throw new Error('No images provided for PDF generation');
+  }
+
+  // Resolve all image sizes first
+  const resolvedImages = [];
+  for (const img of images) {
+    let w = img.width || 0;
+    let h = img.height || 0;
+    if (w <= 0 || h <= 0) {
+      try {
+        const size = await getImageSize(img.uri);
+        w = size.width;
+        h = size.height;
+      } catch (err) {
+        console.warn('Failed to resolve image size for', img.uri, err);
+      }
+    }
+    resolvedImages.push({
+      uri: img.uri,
+      width: w,
+      height: h,
+    });
+  }
+
+  const objects: Uint8Array[] = [];
+  
+  // Object 1: Catalog
+  const obj1 = stringToUint8Array("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+  objects.push(obj1);
+  
+  // Object 2: Pages Parent
+  const kids: string[] = [];
+  for (let i = 0; i < resolvedImages.length; i++) {
+    kids.push(`${3 * i + 3} 0 R`);
+  }
+  const obj2 = stringToUint8Array(`2 0 obj\n<< /Type /Pages /Count ${resolvedImages.length} /Kids [${kids.join(' ')}] >>\nendobj\n`);
+  objects.push(obj2);
+
+  // Compile each page
+  for (let i = 0; i < resolvedImages.length; i++) {
+    const img = resolvedImages[i];
+    const pageObjNum = 3 * i + 3;
+    const contentObjNum = 3 * i + 4;
+    const imageObjNum = 3 * i + 5;
+    
+    // Read the image file as base64
+    const cleanPath = getCleanPath(img.uri);
+    const base64Data = await ReactNativeBlobUtil.fs.readFile(cleanPath, 'base64');
+    const imgBytes = decodeBase64(base64Data);
+
+    // Page dimensions preserving aspect ratio fit to A4 bounding box
+    const { pageWidth, pageHeight } = fitImageToA4(img.width, img.height);
+    
+    // Page Object
+    const pageText = `${pageObjNum} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Contents ${contentObjNum} 0 R /Resources << /XObject << /Im${i} ${imageObjNum} 0 R >> >> >>\nendobj\n`;
+    const pageBytes = stringToUint8Array(pageText);
+    
+    // Content Stream (Draws the image scaled to exactly match page dimensions)
+    const contentStream = `q\n${pageWidth} 0 0 ${pageHeight} 0 0 cm\n/Im${i} Do\nQ\n`;
+    const contentText = `${contentObjNum} 0 obj\n<< /Length ${contentStream.length} >>\nstream\n${contentStream}endstream\nendobj\n`;
+    const contentBytes = stringToUint8Array(contentText);
+    
+    // Image Object wrapping the binary JPEG data
+    const headerText = `${imageObjNum} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${img.width > 0 ? img.width : pageWidth} /Height ${img.height > 0 ? img.height : pageHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imgBytes.length} >>\nstream\n`;
     const headerBytes = stringToUint8Array(headerText);
     const footerBytes = stringToUint8Array(`\nendstream\nendobj\n`);
     
