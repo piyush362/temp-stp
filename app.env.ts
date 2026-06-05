@@ -7,7 +7,7 @@ export const RAZORPAY_KEY = 'rzp_live_RRl7SdeTIHaKIW';
 //
 
 // DEVELOPMENT URL
-// export const BASEURL = 'https://dev-user-api.stapples.in';
+// export const BASEURL = 'https://new-dev-api.stapples.in';
 // export const RAZORPAY_KEY = 'rzp_test_RQ8UAoI4nEttmQ';
 
 // Google API
